@@ -382,12 +382,12 @@
   .whatsnew-body ul{margin:0 0 12px; padding-left:20px;}
   .whatsnew-body li{margin-bottom:10px;}
   .whatsnew-foot{font-size:var(--fs-sm); color:var(--ink-dim); margin-top:4px;}
-  .whatsnew-btn{display:block; width:calc(100% - 36px); margin:0 18px 18px;
+  .whatsnew-btn, .rod-zoom-done{display:block; width:calc(100% - 36px); margin:0 18px 18px;
     padding:14px; background:var(--hazard); color:#1a1a1a; border:none;
     border-radius:10px; font-family:'Oswald',sans-serif; font-weight:700;
     font-size:16px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
     -webkit-tap-highlight-color:transparent;}
-  .whatsnew-btn:active{background:var(--hazard-deep);}
+  .whatsnew-btn:active, .rod-zoom-done:active{background:var(--hazard-deep);}
 
   /* One-time install suggestion banner */
   .install-tip{background:var(--panel); border:2px solid var(--hazard); border-radius:12px;
@@ -630,6 +630,40 @@
   .bug-footer{text-align:center; font-size:var(--fs-hint); color:var(--ink-dim);
     margin-top:24px; line-height:1.7; letter-spacing:.3px;}
   .bug-footer a{color:var(--hazard-ink); text-decoration:underline; word-break:break-all;}
+
+  /* ===== Rod at 2x =====
+     Same face as the inline rod, twice the size. Sized in vh so it uses the
+     whole phone screen without ever needing to scroll. */
+  .rod-zoom{position:fixed; inset:0; z-index:5200; display:flex;
+    align-items:center; justify-content:center; padding:16px;
+    background:rgba(10,11,12,.86); backdrop-filter:blur(2px);}
+  .rod-zoom-card{width:100%; max-width:420px; background:var(--panel);
+    border:2px solid var(--line); border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.6);
+    padding:0 0 16px;}
+  .rod-zoom-head{display:flex; justify-content:space-between; align-items:center;
+    padding:13px 16px; border-bottom:2px solid var(--line);
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:16px;
+    letter-spacing:1px; text-transform:uppercase; color:var(--ink);}
+  .rod-zoom-body{display:flex; gap:16px; align-items:stretch; padding:16px 16px 14px;}
+  .rod-widget-zoom{flex:0 0 auto; width:148px; border:2px solid var(--line);
+    border-radius:8px; background:var(--panel-2); padding:4px;}
+  /* 2x the inline 68px face; height fills the screen rather than a fixed box */
+  .rod-widget-zoom .rod-viewport{height:min(56vh, 430px);}
+  .rod-zoom-side{flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;
+    justify-content:center;}
+  .rod-zoom-cap{font-size:var(--fs-label); letter-spacing:1.5px; text-transform:uppercase;
+    color:var(--ink-dim);}
+  .rod-zoom-val{font-family:'Oswald',sans-serif; font-weight:700; font-size:46px;
+    line-height:1; color:var(--green); letter-spacing:-.5px;}
+  .rod-zoom-ftin{font-size:var(--fs-sm); color:var(--ink-dim);}
+  .rod-zoom-hint{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.5; margin-top:10px;}
+  .rod-zoom-done{width:calc(100% - 32px); margin:0 16px;}
+  /* The rod guides toggle hides the inline widgets; it must not blank the zoom. */
+  body.rods-off .rod-widget-zoom{display:block;}
+  @media (max-width:360px){
+    .rod-zoom-body{flex-direction:column; align-items:center;}
+    .rod-zoom-side{align-items:center; text-align:center;}
+  }
 
   /* ===== Banners: update available, storage trouble, stale setup ===== */
   .bar{display:flex; align-items:center; gap:10px; padding:11px 13px;
@@ -978,7 +1012,7 @@
             </div>
           </div>
         </div>
-        <div class="rod-hint">↕ <b>Drag rod</b> to match the level — or type left</div>
+        <div class="rod-hint">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</div>
       </div>
 
       <div class="readout">
@@ -1010,7 +1044,7 @@
           </div>
         </div>
       </div>
-      <div class="rod-hint">↕ <b>Drag rod</b> to match the level — or type left</div>
+      <div class="rod-hint">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</div>
     </div>
   </div>
 
@@ -1178,6 +1212,27 @@
   </div>
 </div>
 
+<!-- Rod at 2x. Same face, same drag, twice the size. -->
+<div class="rod-zoom" id="rodZoom" style="display:none;" role="dialog" aria-modal="true"
+     aria-labelledby="rodZoomTitle" data-close="closeRodZoom">
+  <div class="rod-zoom-card">
+    <div class="rod-zoom-head">
+      <span id="rodZoomTitle">Rod at 2×</span>
+      <button class="map-close" data-act="closeRodZoom" aria-label="Close rod zoom">✕</button>
+    </div>
+    <div class="rod-zoom-body">
+      <div class="rod-widget rod-widget-zoom" id="rodZoomWidget" data-scale="2"></div>
+      <div class="rod-zoom-side">
+        <div class="rod-zoom-cap">Reading</div>
+        <div class="rod-zoom-val" id="rodZoomVal">—</div>
+        <div class="rod-zoom-ftin" id="rodZoomFtIn"></div>
+        <div class="rod-zoom-hint">↕ Drag the rod. The red line is the level's line of sight.</div>
+      </div>
+    </div>
+    <button class="rod-zoom-done" data-act="closeRodZoom">Done</button>
+  </div>
+</div>
+
 <!-- One-time What's New / version notes -->
 <div class="whatsnew-modal" id="whatsnewModal" style="display:none;" role="dialog" aria-modal="true"
      aria-labelledby="whatsnewTitle" data-close="dismissWhatsNew">
@@ -1187,7 +1242,20 @@
       <span class="whatsnew-ver" id="whatsnewVer"></span>
     </div>
     <div class="whatsnew-body">
-      <p><b>Site Level Calculator v1.04</b> — a field-accuracy and data-safety update:</p>
+      <p><b>Site Level Calculator v1.05</b> — the grade rod, rebuilt from a photograph of the real thing:</p>
+      <ul>
+        <li><b>The rod face is now the actual rod</b> — measured off a photo of the crew's own rod, bar by
+          bar. Five bars per tenth instead of hairlines, the whole-foot step, the small repeated
+          <b>2FT</b> tags, and numerals at their true size.</li>
+        <li><b>The tapered bar tips mean something</b> — on each tenth the long bar tapers <i>down</i>, so you
+          read its <b>top</b> edge; the half-tenth bar tapers <i>up</i>, so you read its <b>bottom</b> edge. That is
+          how you tell which edge of a bar is the graduation.</li>
+        <li><b>Double-tap the rod to zoom</b> — it opens at 2×, big enough to read the hundredth. Drag it
+          there and the reading follows; <b>Done</b> or the back gesture closes it.</li>
+        <li><b>The title is no longer hidden</b> behind the status bar on an installed phone, and the
+          <b>rod guides are back on</b> for everyone.</li>
+      </ul>
+      <p><b>Still in from v1.04</b>:</p>
       <ul>
         <li><b>Offsets and stations are no longer capped</b> — offsets past 99 ft and stations past 999+99
           used to be silently rescaled as you typed (<b>125</b> became <b>12.50</b>). They are entered as typed now.</li>
@@ -1216,7 +1284,7 @@
   // Single source of truth. sw.js derives its cache name from the ?v= on its
   // registration URL, the What's New gate compares against this, and the footer
   // and bug-report mailto both print it — so there is nothing left to hand-sync.
-  const APP_VERSION = '1.04';
+  const APP_VERSION = '1.05';
   // One list, referenced by the bug footer, the CSV mail fallback and the share
   // sheet text. A forwarding alias would be better still than two people.
   const CONTACT = ['dbertaut@rngd.com', 'fchavez@rngd.com'];
@@ -3632,76 +3700,119 @@
   const ROD_MAX_FT    = 50;
   const ROD_STRIP_H   = ROD_MAX_FT * ROD_PX_PER_FT; // 12000
 
+  // ----- Rod face -----------------------------------------------------------
+  // Geometry measured off a photograph of the crew's own fibreglass rod
+  // (180x1015 px, 761.2 px per foot), then re-derived three times independently
+  // to sub-pixel precision:
+  //
+  //   * Every graduation shares one left edge. All length differences are at the
+  //     RIGHT tip, which takes four forms:
+  //         short bars       x = 84.0, dead flat (varies < 0.2 px)
+  //         long bars        x = 95.5 at the pointed corner, 92.0 at the cut one
+  //         whole-foot bars  a hard STEP: 111.5 on the top half, 90.0 below
+  //   * Bars are 0.0101 ft tall on a 0.0200 ft pitch, so the ink covers half the
+  //     pitch and there are exactly FIVE bars per tenth. They are BARS, not
+  //     hairlines - the previous version drew thin strokes at every hundredth,
+  //     which is why it never looked like the rod.
+  //   * Reading top to bottom within a tenth: LONG, short, LONG, short, short.
+  //     Verified as a period-5 lattice over all 63 bars in frame, no exceptions.
+  //   * The two long bars carry MIRRORED chamfers and the pointed corner sits on
+  //     the graduation - first long tapers down so its TOP edge is x.x0, second
+  //     tapers up so its BOTTOM edge is x.x5. That is how you know which edge of
+  //     a 0.01 ft thick bar to read. Numeral centres land on those top edges to
+  //     within 0.2 px, so the numerals confirm the rule, not just the ink.
+  //   * A tenth numeral is only about half a tenth tall on the real rod, which at
+  //     240 px/ft is ~12 px. The old face drew them nearly 3x oversized.
+  //
+  // The x values below are those measurements mapped into a 68-unit field, which
+  // is exactly the viewport's inner width, so nothing is stretched.
+  const ROD_VBW    = 68;
+  const ROD_TIP_S  = 18.4;   // (84.0  - 48.4) * 68/131.6   short bar
+  const ROD_TIP_L  = 24.3;   // (95.5  - 48.4) * 68/131.6   long bar, pointed corner
+  const ROD_TAPER  = 1.8;    // (95.5  - 92.0) * 68/131.6   chamfer depth
+  const ROD_FOOT_T = 32.6;   // (111.5 - 48.4) * 68/131.6   foot bar, top half
+  const ROD_FOOT_B = 21.5;   // (90.0  - 48.4) * 68/131.6   foot bar, bottom half
+  const ROD_NUM_X  = 44.5;   // numerals span x 123..146, centre 134.5
+  const ROD_BAR_H  = 2.4;    // 0.01 ft at 240 px/ft
+  const ROD_INK    = '#101010';
+  const ROD_RED    = '#c41e1e';
+
+  function rodText(x, y, size, fill, str){
+    return '<text x="' + x + '" y="' + y + '" font-family="Oswald,\'Arial Narrow\',sans-serif" ' +
+           'font-weight="700" font-size="' + size + '" fill="' + fill +
+           '" text-anchor="middle" dominant-baseline="central">' + str + '</text>';
+  }
+  // Long bars are trapezoids: the tip tapers along a diagonal and the full-width
+  // corner it tapers away from is the reading edge.
+  function rodBar(y, tip, taper){
+    if(!taper) return '<rect x="0" y="' + y + '" width="' + tip + '" height="' + ROD_BAR_H + '" fill="' + ROD_INK + '"/>';
+    const bot = y + ROD_BAR_H, cut = tip - ROD_TAPER;
+    const pts = (taper === 'down') ? [[0,y],[tip,y],[cut,bot],[0,bot]]    // TOP edge is the graduation
+                                   : [[0,y],[cut,y],[tip,bot],[0,bot]];   // BOTTOM edge is the graduation
+    return '<polygon points="' + pts.map(p => p[0] + ',' + p[1]).join(' ') + '" fill="' + ROD_INK + '"/>';
+  }
+
   function buildRodSvg(){
-    // Narrow rod styled like a real Philadelphia/Frisco grade rod from the photo:
-    // dense hundredth ticks down the LEFT edge in an alternating-length pattern,
-    // longer tick at the half-tenth (0.05), bigger ticks at tenths, biggest at
-    // feet. Red foot numbers, black tenth digits, all centered on rod body.
-    //
-    // Hundredths are drawn via an SVG <pattern> tile (24 px = 0.1 ft tall) so
-    // the browser only paints ~9 line elements per tile instead of 5,000
-    // individual lines for the full 50-ft rod.
-    const VBW = 80;
     const VBH = ROD_STRIP_H;
-    let s = '<svg viewBox="0 0 ' + VBW + ' ' + VBH + '" preserveAspectRatio="none" ' +
-            'xmlns="http://www.w3.org/2000/svg">';
+    let s = '<svg viewBox="0 0 ' + ROD_VBW + ' ' + VBH + '" preserveAspectRatio="none" ' +
+            'xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
 
-    // Hundredth-tick pattern, one tile = 0.1 ft = 24 px
-    // Ticks at y = 2.4, 4.8, ..., 21.6 (the 9 hundredths between two tenths)
-    // Lengths alternate; longest at the half-tenth (y=12, which is 0.05 ft)
-    s += '<defs><pattern id="hticks" x="0" y="0" width="' + VBW + '" height="24" patternUnits="userSpaceOnUse">';
-    const hticks = [
-      [ 2.4, 14],  // 0.01
-      [ 4.8,  8],  // 0.02
-      [ 7.2, 14],  // 0.03
-      [ 9.6,  8],  // 0.04
-      [12.0, 18],  // 0.05 — half-tenth, longest
-      [14.4,  8],  // 0.06
-      [16.8, 14],  // 0.07
-      [19.2,  8],  // 0.08
-      [21.6, 14]   // 0.09
-    ];
-    hticks.forEach(([y, len]) => {
-      s += '<line x1="0" y1="' + y + '" x2="' + len + '" y2="' + y +
-           '" stroke="#0a0a0a" stroke-width="1.1" vector-effect="non-scaling-stroke"/>';
-    });
-    s += '</pattern></defs>';
+    // One 0.1 ft tile carries all five bars and is repeated down the strip, so
+    // the browser paints five shapes per tile instead of 2,500 for a 50 ft rod.
+    s += '<defs><pattern id="rodTile" x="0" y="0" width="' + ROD_VBW + '" height="24" patternUnits="userSpaceOnUse">' +
+         rodBar(0,    ROD_TIP_L, 'down') +   // the tenth      - read its TOP edge
+         rodBar(4.8,  ROD_TIP_S, null) +
+         rodBar(9.6,  ROD_TIP_L, 'up')   +   // the half-tenth - read its BOTTOM edge
+         rodBar(14.4, ROD_TIP_S, null) +
+         rodBar(19.2, ROD_TIP_S, null) +
+         '</pattern></defs>';
 
-    // Cream rod face
-    s += '<rect x="0" y="0" width="' + VBW + '" height="' + VBH + '" fill="#fafaf2"/>';
-    // Hundredth ticks painted via the pattern across the whole strip
-    s += '<rect x="0" y="0" width="' + VBW + '" height="' + VBH + '" fill="url(#hticks)"/>';
+    s += '<rect width="' + ROD_VBW + '" height="' + VBH + '" fill="#fafaf2"/>';
+    s += '<rect width="' + ROD_VBW + '" height="' + VBH + '" fill="url(#rodTile)"/>';
 
-    // Tenths + foot marks (drawn on top of the pattern)
-    for(let i = 0; i <= ROD_MAX_FT * 10; i++){
-      const ft = i / 10;
-      const y = VBH - ft * ROD_PX_PER_FT;
-      const whole = i % 10 === 0;
-      if(whole){
-        // Foot mark — long thick black tick + big chunky red foot number
-        s += '<line x1="0" y1="' + y + '" x2="26" y2="' + y +
-             '" stroke="#0a0a0a" stroke-width="3" vector-effect="non-scaling-stroke"/>';
-        s += '<text x="48" y="' + y + '" font-family="Arial Black,Impact,sans-serif" ' +
-             'font-weight="900" font-size="40" fill="#c41e1e" ' +
-             'text-anchor="middle" dominant-baseline="middle">' + ft.toFixed(0) + '</text>';
-      } else {
-        // Tenth mark — medium tick + black tenth digit
-        s += '<line x1="0" y1="' + y + '" x2="22" y2="' + y +
-             '" stroke="#0a0a0a" stroke-width="2" vector-effect="non-scaling-stroke"/>';
-        s += '<text x="48" y="' + y + '" font-family="Arial Black,Impact,sans-serif" ' +
-             'font-weight="900" font-size="18" fill="#0a0a0a" ' +
-             'text-anchor="middle" dominant-baseline="middle">' + (i % 10) + '</text>';
-      }
+    // Whole-foot marks: not a longer bar but a stepped one, the long half flush
+    // with the foot line. Drawn over the tile, which they extend.
+    for(let f = 0; f <= ROD_MAX_FT; f++){
+      const y = VBH - f * ROD_PX_PER_FT, mid = y + ROD_BAR_H * 0.5, bot = y + ROD_BAR_H;
+      s += '<polygon points="0,' + y + ' ' + ROD_FOOT_T + ',' + y + ' ' +
+           ROD_FOOT_T + ',' + mid + ' ' + ROD_FOOT_B + ',' + mid + ' ' +
+           ROD_FOOT_B + ',' + bot + ' 0,' + bot + '" fill="' + ROD_INK + '"/>';
     }
+
+    // Numerals sit centred ON the graduation line, as they do on the rod.
+    for(let i = 0; i <= ROD_MAX_FT * 10; i++){
+      const y = VBH - (i / 10) * ROD_PX_PER_FT;
+      if(i % 10 === 0) s += rodText(ROD_NUM_X, y, 21, ROD_RED, String(i / 10));
+      else             s += rodText(ROD_NUM_X, y, 16, ROD_INK, String(i % 10));
+    }
+
+    // The small red foot tag, repeated inside the foot so a foot reference stays
+    // in view between the big red numerals.
+    for(let f = 0; f < ROD_MAX_FT; f++){
+      [0.35, 0.65].forEach(o => {
+        s += rodText(37, VBH - (f + o) * ROD_PX_PER_FT, 8, ROD_RED, f + 'FT');
+      });
+    }
+
     s += '</svg>';
     return s;
   }
+
+  // Every widget bound to a given input, so a drag in the zoom view moves the
+  // inline rod too. Assigning input.value fires no 'input' event, so they cannot
+  // sync themselves through the DOM.
+  const rodWidgets = {};
 
   function setupRodWidget(widget){
     const inputId = widget.dataset.input;
     const input = document.getElementById(inputId);
     const strip = widget.querySelector('.rod-strip');
     const viewport = widget.querySelector('.rod-viewport');
+    if(!input || !strip || !viewport) return;   // an un-built shell, e.g. the zoom host
+    const scale = parseFloat(widget.dataset.scale) || 1;
+    const pxPerFt = ROD_PX_PER_FT * scale;
+    const stripH = ROD_STRIP_H * scale;
+    strip.style.height = stripH + 'px';
     strip.innerHTML = buildRodSvg();
 
     function clamp(v){ return Math.max(0, Math.min(ROD_MAX_FT, v)); }
@@ -3721,39 +3832,45 @@
       viewport.classList.toggle('rod-oor', reading !== shown);
       // Position so that the strip-y for 'shown' lands on the viewport's
       // vertical center (where the crosshair sits).
-      const stripY = ROD_STRIP_H - shown * ROD_PX_PER_FT;
+      const stripY = stripH - shown * pxPerFt;
       const vpH = viewport.clientHeight || 160;
-      const translateY = (vpH / 2) - stripY;
-      strip.style.transform = 'translateY(' + translateY + 'px)';
+      strip.style.transform = 'translateY(' + ((vpH / 2) - stripY) + 'px)';
+      viewport.setAttribute('aria-valuenow', shown.toFixed(2));
+      viewport.setAttribute('aria-valuetext', shown.toFixed(2) + ' feet');
     }
 
-    // expose for resetAll
-    widget._setRod = function(r){
+    widget._setRod = function(r){                  // used by resetAll
       input.value = (r > 0 ? r.toFixed(2) : '');
       applyToRod(clamp(r));
     };
+    widget._refresh = function(){ applyToRod(getInputValue()); };
+    (rodWidgets[inputId] = rodWidgets[inputId] || []).push(widget);
 
-    // Typing in the input → rod follows
-    input.addEventListener('input', () => applyToRod(getInputValue()));
+    // Typing in the input → every rod on that input follows
+    input.addEventListener('input', () => syncRods(inputId));
+
+    // Writes a dragged reading back to the input and to every bound rod.
+    function commit(r){
+      input.value = r.toFixed(2);
+      syncRods(inputId);
+      calc();
+    }
 
     // Drag the rod → input follows
-    let dragging = false, startY = 0, startReading = 0;
+    let dragging = false, startY = 0, startReading = 0, moved = 0;
     function down(y){
-      dragging = true;
+      dragging = true; moved = 0;
       startY = y;
       startReading = getInputValue();
     }
     function move(y){
       if(!dragging) return;
       const dy = y - startY;
-      // dy > 0 means finger moved down → reading increases
-      const dReading = dy / ROD_PX_PER_FT;
-      // The drag itself genuinely cannot go past the ends of the rod, so the
+      moved = Math.max(moved, Math.abs(dy));
+      // dy > 0 means finger moved down → reading increases.
+      // The drag itself genuinely cannot run past the ends of the rod, so the
       // clamp stays here (not in getInputValue).
-      const r = clamp(clamp(startReading) + dReading);
-      input.value = r.toFixed(2);
-      applyToRod(r);
-      calc();
+      commit(clamp(clamp(startReading) + dy / pxPerFt));
     }
     // Assigning input.value programmatically fires no 'input' event, so the
     // delegated saveState listener never ran and calc() does not save either:
@@ -3781,8 +3898,92 @@
     window.addEventListener('mousemove', e => move(e.clientY));
     window.addEventListener('mouseup', up);
 
-    // Initial position
-    applyToRod(getInputValue());
+    // ---- Open the zoom view ----
+    // Double-tap, not single tap: a single tap is the START of a drag and the
+    // whole surface is a drag target, so a single tap cannot mean "zoom". A tap
+    // that travelled more than a few pixels was a drag and never counts toward
+    // a double-tap.
+    if(scale === 1){
+      let lastTap = 0;
+      viewport.addEventListener('touchend', () => {
+        const now = Date.now();
+        if(moved <= 6 && now - lastTap < 400){ lastTap = 0; openRodZoom(inputId); }
+        else lastTap = now;
+      });
+      viewport.addEventListener('dblclick', e => { e.preventDefault(); openRodZoom(inputId); });
+    }
+
+    // Keyboard equivalents — a pointer-only control would undo the access pass.
+    const field = (inputId === 'bs' ? 'Backsight' : 'Foresight');
+    viewport.tabIndex = 0;
+    viewport.setAttribute('role', 'slider');
+    viewport.setAttribute('aria-valuemin', '0');
+    viewport.setAttribute('aria-valuemax', String(ROD_MAX_FT));
+    viewport.setAttribute('aria-label', field + ' rod. Arrow keys adjust' +
+      (scale === 1 ? ', Enter zooms in.' : '.'));
+    viewport.addEventListener('keydown', e => {
+      if(scale === 1 && (e.key === 'Enter' || e.key === ' ')){
+        e.preventDefault(); openRodZoom(inputId); return;
+      }
+      const step = e.shiftKey ? 0.1 : 0.01;
+      if(e.key === 'ArrowUp')        commit(clamp(clamp(getInputValue()) + step));
+      else if(e.key === 'ArrowDown') commit(clamp(clamp(getInputValue()) - step));
+      else return;
+      e.preventDefault();
+      saveState();
+    });
+
+    applyToRod(getInputValue());   // initial position
+  }
+
+  function syncRods(inputId){
+    (rodWidgets[inputId] || []).forEach(w => { if(w._refresh) w._refresh(); });
+    if(rodZoomInput === inputId) updateRodZoomReadout();
+  }
+
+  // ===== Rod zoom =====
+  // The inline rod is 68 px wide and shows 0.7 ft; at arm's length in the sun
+  // that is enough to set a reading but not to read the hundredth off it. The
+  // zoom is the same face at 2x — the graduations double, the numerals double,
+  // nothing is re-drawn or re-styled.
+  let rodZoomInput = null;
+  function openRodZoom(inputId){
+    const modal = document.getElementById('rodZoom');
+    const host  = document.getElementById('rodZoomWidget');
+    if(!modal || !host) return;
+    rodZoomInput = inputId;
+    document.getElementById('rodZoomTitle').textContent =
+      (inputId === 'bs' ? 'Backsight' : 'Foresight') + ' — rod at 2×';
+    // Rebuild for whichever field was opened. One widget, re-pointed, so the
+    // zoom can never drift from the inline rod's behaviour.
+    if(host.dataset.input !== inputId || !host._refresh){
+      if(host.dataset.input && rodWidgets[host.dataset.input]){
+        rodWidgets[host.dataset.input] = rodWidgets[host.dataset.input].filter(w => w !== host);
+      }
+      host.dataset.input = inputId;
+      host.dataset.scale = '2';
+      host.innerHTML = '<div class="rod-viewport"><div class="rod-strip"></div>' +
+                       '<div class="rod-crosshair"></div><div class="rod-oor-tag">OFF ROD</div></div>';
+      setupRodWidget(host);
+    } else {
+      host._refresh();
+    }
+    updateRodZoomReadout();
+    openModalEl(modal);
+  }
+  function closeRodZoom(){
+    const modal = document.getElementById('rodZoom');
+    if(!modal || modal.style.display === 'none') return;
+    closeModalEl(modal);
+    rodZoomInput = null;
+  }
+  function updateRodZoomReadout(){
+    const el = document.getElementById('rodZoomVal');
+    if(!el || !rodZoomInput) return;
+    const v = parseFloat(document.getElementById(rodZoomInput).value);
+    el.textContent = isNaN(v) ? '—' : v.toFixed(2);
+    const fi = document.getElementById('rodZoomFtIn');
+    if(fi) fi.textContent = isNaN(v) ? '' : ftIn(v);
   }
 
   // ===== One-time install suggestion (mobile browser, not installed) =====
@@ -3851,7 +4052,7 @@
   const ACTIONS = {
     setMainMode, setSource, setSlopeGoal, setDistMode, setPipeMode,
     signToggle, offDirToggle, offUnitToggle,
-    toggleGps, openMapModal, closeMapModal,
+    toggleGps, openMapModal, closeMapModal, closeRodZoom,
     resetAll, saveShot, clearShots, exportShots, exportPipe,
     setSide, useElev, turnPoint,
     toggleSun, toggleRods,
@@ -3880,7 +4081,9 @@
     if(e.key !== 'Escape') return;
     const wn = document.getElementById('whatsnewModal');
     const mm = document.getElementById('mapModal');
+    const rz = document.getElementById('rodZoom');
     if(wn && wn.style.display === 'flex'){ dismissWhatsNew(); return; }
+    if(rz && rz.style.display === 'flex'){ closeRodZoom(); return; }
     if(mm && mm.style.display === 'flex'){ closeMapModal(); }
   });
 
@@ -3926,7 +4129,9 @@
     renderFooterBits();
     renderLegend();
     renderBmPicker(true);
-    document.querySelectorAll('.rod-widget').forEach(setupRodWidget);
+    // [data-input] excludes #rodZoomWidget, which is an empty shell until the
+    // first zoom builds it.
+    document.querySelectorAll('.rod-widget[data-input]').forEach(setupRodWidget);
     // Cards must not be rebuilt out from under a finger.
     const picker = document.getElementById('bmPicker');
     if(picker){
@@ -4034,6 +4239,23 @@
     const b = BENCHMARKS[0];
     const ll = LA_S.inverse(b.e, b.n), sp = LA_S.forward(ll.lat, ll.lon);
     ok('LA_S round-trip < 0.05 ft', Math.hypot(sp.e - b.e, sp.n - b.n) < 0.05, true);
+
+    // Rod face: five bars per tenth, two of them tapered in opposite directions.
+    const rodSvg = document.createElement('div');
+    rodSvg.innerHTML = buildRodSvg();
+    const tile = rodSvg.querySelector('pattern#rodTile');
+    ok('rod tile has 5 bars',   tile ? tile.children.length : 0, 5);
+    ok('rod tile has 2 tapers', tile ? tile.querySelectorAll('polygon').length : 0, 2);
+    const tp = [...(tile ? tile.querySelectorAll('polygon') : [])].map(el =>
+      el.getAttribute('points').split(' ').map(q => q.split(',').map(Number)));
+    const widestTop = p => {
+      const ys = p.map(q => q[1]);
+      const top = Math.max(...p.filter(q => q[1] === Math.min(...ys)).map(q => q[0]));
+      const bot = Math.max(...p.filter(q => q[1] === Math.max(...ys)).map(q => q[0]));
+      return top > bot;
+    };
+    ok('tenth bar reads its top edge',      tp[0] ? widestTop(tp[0]) : null, true);
+    ok('half-tenth reads its bottom edge',  tp[1] ? widestTop(tp[1]) : null, false);
 
     // Every wired action resolves, and every data-act in the markup is wired.
     const acts = Array.from(document.querySelectorAll('[data-act]')).map(el => el.dataset.act);
