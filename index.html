@@ -217,7 +217,14 @@
   .minimap-leaflet{position:absolute; inset:0;}
   .minimap-radar{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
   .minimap-radar svg{height:100%; width:auto; aspect-ratio:1/1; display:block;}
-  .minimap-tap{position:absolute; inset:0; z-index:1000; cursor:pointer;}
+  /* A real <button> covering the whole map. Without these resets the UA paints
+     ButtonFace over it — an opaque grey plate that hides the map completely
+     (the "tap to expand" chip sits at z-index 1001, so it stayed visible and
+     made it look as though the map had simply failed to load). */
+  .minimap-tap{position:absolute; inset:0; z-index:1000; cursor:pointer;
+    background:transparent; border:0; padding:0; margin:0; font:inherit; color:inherit;
+    -webkit-appearance:none; appearance:none;}
+  .minimap-tap:focus-visible{outline:3px solid var(--blue); outline-offset:-4px;}
   /* Chip sits on the map, not on the page — so it keeps a dark plate and light
      ink in both themes rather than inheriting --ink (near-black in Sunlight). */
   .gps-minimap::after{content:"⤢ TAP TO EXPAND"; position:absolute; bottom:6px; right:9px;
