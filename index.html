@@ -38,6 +38,7 @@
     --ink-dim:#9aa0a2;
     --green:#5fd07a;
     --red:#ff6b5e;
+    --red-wash:#3a1a17;   /* red at panel weight, for flagged fields */
     --blue:#6db3f5;
     --shadow:0 4px 0 rgba(0,0,0,.45);
     /* Rod face + crosshair are literal colors in both themes (a rod is a rod). */
@@ -441,6 +442,21 @@
     -webkit-tap-highlight-color:transparent;}
   .off-hint{font-size:var(--fs-hint); color:var(--ink-dim); margin-top:10px; line-height:1.5;}
   .off-hint b{color:var(--hazard-ink);}
+
+  /* A field whose entry could not be represented — a fraction, a foot mark, a
+     second decimal point. The app refuses to guess what was meant, so the mark
+     stays until the field is cleared and retyped. */
+  input.bad-entry{border-color:var(--red) !important; background:var(--red-wash) !important;}
+  .frac-note{margin-top:10px; padding:10px 11px; border-radius:var(--r-sm);
+    border:1px solid var(--red); background:var(--red-wash);
+    font-size:var(--fs-hint); color:var(--ink); line-height:1.5;}
+  .frac-note b{color:var(--hazard-ink);}
+  /* The conversions are a lookup table, not prose — laid out as a wrapping row
+     of chips so the eye can find the one it needs at arm's length. */
+  .frac-keys{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .frac-key{padding:3px 8px; border-radius:4px; background:var(--panel-2);
+    font-family:'Roboto Mono',monospace; font-size:var(--fs-label); white-space:nowrap;}
+  .frac-key.lead{background:var(--panel); box-shadow:inset 0 0 0 1px var(--hazard-ink);}
   .off-empty{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.5;}
   .off-step{display:flex; align-items:center; gap:10px; padding:9px 2px;
     border-bottom:1px solid #3a3e40; font-family:'Roboto Mono',monospace; font-size:13px;}
@@ -448,6 +464,7 @@
   .off-step.start-step .off-step-lbl{color:var(--blue);}
   .off-step-lbl{flex:0 0 44px; font-family:'Oswald',sans-serif; font-weight:700; color:var(--hazard-ink);}
   .off-step-off{flex:1; color:var(--ink-dim);}
+  .off-step-frac{color:var(--hazard-ink); font-weight:700;}
   .off-step-elev{color:var(--green); font-weight:600; text-align:right;}
 
   /* Grade rod widget — visual check + drag-to-set, sits to the right of input */
@@ -481,8 +498,17 @@
     background:var(--rod-cross); transform:translateX(-50%);
     box-shadow:0 0 0 1.5px rgba(255,255,255,.9);}
   .rod-hint{font-size:var(--fs-micro); color:var(--ink-dim); margin-top:6px;
-    text-align:center; letter-spacing:1px; text-transform:uppercase;}
+    text-align:center; letter-spacing:1px; text-transform:uppercase;
+    min-height:22px;}   /* reserve the row so swapping in Undo cannot shift layout */
   .rod-hint b{color:var(--hazard-ink); font-weight:700;}
+  /* Shown for a few seconds after a drag actually moved the reading. A gloved
+     nudge on the rod is a silent edit to a survey number otherwise — the value
+     changes with nothing on screen saying what it used to be. */
+  .rod-undo{font:inherit; font-weight:700; letter-spacing:.5px; text-transform:none;
+    color:var(--hazard-ink); background:var(--panel-2);
+    border:1.5px solid var(--hazard-ink); border-radius:var(--r-sm);
+    padding:3px 12px; min-height:22px; cursor:pointer;}
+  .rod-undo[hidden]{display:none;}
 
   /* Settings + toggle switch. These are set-once preferences, so they no longer
      wear full .card chrome or sit above Step 1 — they used ~39% of a 620px
@@ -608,9 +634,15 @@
   .shots-list-head{display:flex; justify-content:space-between; align-items:center;
     margin-top:18px; font-size:var(--fs-hint); color:var(--ink-dim); letter-spacing:1px; text-transform:uppercase;}
   .shots-list-head b{color:var(--hazard-ink); font-family:'Oswald',sans-serif; font-size:15px;}
+  .shots-clear-group{display:flex; gap:12px; align-items:center;}
   .shots-clear{background:transparent; border:none; color:var(--ink-dim);
     font-family:'Roboto Mono',monospace; font-size:var(--fs-label); text-decoration:underline;
     cursor:pointer; letter-spacing:.5px; text-transform:none;}
+  .shots-clear:disabled{opacity:.35; cursor:not-allowed; text-decoration:none;}
+  /* A shot that has left the phone. The tick is what makes "Clear exported"
+     legible — you can see exactly which rows it would take. */
+  .shot-row.shot-exported{border-left:3px solid var(--green);}
+  .shot-sent{color:var(--green); font-weight:700;}
   .shots-list{margin-top:8px;}
   .shots-empty{font-size:var(--fs-label); color:var(--ink-dim); text-align:center; padding:10px 0; letter-spacing:.5px;}
   .shot-row{display:flex; justify-content:space-between; align-items:flex-start;
@@ -750,6 +782,7 @@
     --ink-dim:#4b5052;
     --green:#0a7a2f;
     --red:#c22315;
+    --red-wash:#fdeae7;
     --blue:#0b62c4;
     --shadow:0 4px 0 rgba(0,0,0,.15);
     /* Sunlight mode exists for glare, so it raises the whole small-text layer,
@@ -945,6 +978,14 @@
           </div>
         </div>
       </div>
+      <div class="frac-note" id="slopeFracNote" role="alert" style="display:none;">
+        ⚠ <b>Fractions are not accepted here</b> — enter decimal feet.
+        <div class="frac-keys">
+          <span class="frac-key lead">6-3/8″ = <b>0.53</b> ft</span>
+          <span class="frac-key">1″ = .08</span><span class="frac-key">3″ = .25</span>
+          <span class="frac-key">6″ = .5</span><span class="frac-key">9″ = .75</span>
+        </div>
+      </div>
       <div class="field" role="group" aria-labelledby="distLbl">
         <div class="lbl" id="distLbl">Horizontal Distance A → B <span class="abbr">DIST</span></div>
         <div class="src-mode" id="distModeToggle" style="margin-bottom:10px;" role="group" aria-label="Distance entry mode">
@@ -1001,6 +1042,16 @@
       </div>
       <div class="lbl" id="offRowsLbl" style="margin-top:4px;">Offsets (stack top → down) <span class="abbr">± FT / IN</span></div>
       <div class="off-rows" id="offRows" role="group" aria-labelledby="offRowsLbl"></div>
+      <div class="frac-note" id="offFracNote" role="alert" style="display:none;">
+        ⚠ <b>Fractions are not accepted here</b> — enter the decimal.
+        <div class="frac-keys">
+          <span class="frac-key lead">6-3/8″ = <b>6.375</b> in</span>
+          <span class="frac-key">⅛ = .125</span><span class="frac-key">¼ = .25</span>
+          <span class="frac-key">⅜ = .375</span><span class="frac-key">½ = .5</span>
+          <span class="frac-key">⅝ = .625</span><span class="frac-key">¾ = .75</span>
+          <span class="frac-key">⅞ = .875</span>
+        </div>
+      </div>
       <div class="off-hint">Each offset stacks on the one above. Toggle <b>−/+</b> for down/up and <b>in/ft</b> per row.</div>
     </div>
 
@@ -1019,7 +1070,10 @@
             </div>
           </div>
         </div>
-        <div class="rod-hint">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</div>
+        <div class="rod-hint" data-rod="bs">
+          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
+        </div>
       </div>
 
       <div class="readout">
@@ -1051,7 +1105,10 @@
           </div>
         </div>
       </div>
-      <div class="rod-hint">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</div>
+      <div class="rod-hint" data-rod="fs">
+        <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+        <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
+      </div>
     </div>
   </div>
 
@@ -1168,7 +1225,10 @@
 
     <div class="shots-list-head">
       <span>Saved shots: <b id="shotsCount">0</b></span>
-      <button class="shots-clear" data-act="clearShots">Clear saved</button>
+      <span class="shots-clear-group">
+        <button class="shots-clear" data-act="clearExportedShots" id="clearExportedBtn">Clear exported</button>
+        <button class="shots-clear" data-act="clearShots">Clear all</button>
+      </span>
     </div>
     <div class="shots-list" id="shotsList"></div>
 
@@ -1249,7 +1309,25 @@
       <span class="whatsnew-ver" id="whatsnewVer"></span>
     </div>
     <div class="whatsnew-body">
-      <p><b>Site Level Calculator v1.05</b> — the grade rod, rebuilt from a photograph of the real thing:</p>
+      <p><b>Site Level Calculator v1.06</b> — five things that were quietly getting numbers wrong:</p>
+      <ul>
+        <li><b>The export receipt tells the truth now</b> — it used to count shots, so deleting two and
+          taking two more made it read "exported" for shots that had never left the phone. Each shot now
+          carries its own state: exported rows show a green <b>✓</b>, and <b>Clear exported</b> deletes
+          only those, leaving anything not yet backed up on the phone.</li>
+        <li><b>A resting glove no longer edits the rod</b> — every pixel of contact used to write straight
+          through, so a brush turned 5.20 into 5.21 silently. It now takes a deliberate drag, and an
+          <b>↺ Undo</b> appears under the rod with the reading you had before.</li>
+        <li><b>Turn points read correctly in the CSV</b> — setups 2, 3 and 4 of a run all claimed to be tied
+          straight to the original benchmark. A turned setup now says which setup it came off and where the
+          run started.</li>
+        <li><b>Fractions are caught instead of mangled</b> — typing <b>6-3/8</b> used to become <b>638</b>.
+          The field is flagged red with the conversions listed, and inches entries echo back as a tape
+          reading (<b>6.38 in ⟶ 6⅜″</b>).</li>
+        <li><b>GPS stops when the phone goes in your pocket</b> — the receiver kept running at full accuracy
+          against a screen nobody was looking at. It picks straight back up when you pull the phone out.</li>
+      </ul>
+      <p><b>Still in from v1.05</b>:</p>
       <ul>
         <li><b>The rod face is now the actual rod</b> — measured off a photo of the crew's own rod, bar by
           bar. Five bars per tenth instead of hairlines, the whole-foot step, the small repeated
@@ -1291,7 +1369,7 @@
   // Single source of truth. sw.js derives its cache name from the ?v= on its
   // registration URL, the What's New gate compares against this, and the footer
   // and bug-report mailto both print it — so there is nothing left to hand-sync.
-  const APP_VERSION = '1.05';
+  const APP_VERSION = '1.06';
   // One list, referenced by the bug footer, the CSV mail fallback and the share
   // sheet text. A forwarding alias would be better still than two people.
   const CONTACT = ['dbertaut@rngd.com', 'fchavez@rngd.com'];
@@ -1422,7 +1500,13 @@
   let gpsRefreshTimer = null; // setInterval handle for 3-second UI refresh
   let gpsLastFix = null;      // timestamp (ms) of the last good position fix
   let turnCount = 0;          // instrument setups behind us (0 = first setup)
-  let turnFromId = '';        // what the current setup was turned off of
+  // Where the RUN started — the benchmark the very first setup was tied to.
+  // Set once, on the first turn, and carried unchanged from there. It used to be
+  // re-stamped from selectedBmId on every turn, and since switching to Manual
+  // never clears selectedBmId, setups 2, 3 and 4 of a run all claimed to be
+  // "turn from AN01" — reading as four independent ties to the same monument
+  // instead of one chain three turns long.
+  let runOriginId = '';
 
   // ===== Screen-reader announcements =====
   // One polite live region for the whole app. Debounced, so it speaks the
@@ -1515,6 +1599,17 @@
     if(inch >= 12){ ft += 1; inch -= 12; }      // 2.999 rounds up to 3′ 0″
     const fr = ['','⅛','¼','⅜','½','⅝','¾','⅞'][e];
     return sign + ft + '′ ' + inch + fr + '″';
+  }
+  // Decimal inches → the nearest ⅛″ as a tape reading (6.375 → "6⅜″").
+  // Same eighths rounding as ftIn, just without the feet.
+  function inFrac(inches){
+    if(inches === null || isNaN(inches)) return '';
+    const sign = inches < 0 ? '−' : '';
+    const abs = Math.abs(inches);
+    let e = Math.round(abs * 8);            // eighths
+    const whole = Math.floor(e / 8); e %= 8;
+    const fr = ['','⅛','¼','⅜','½','⅝','¾','⅞'][e];
+    return sign + whole + fr + '″';
   }
   function fmtFt(ft){ return ft < 1000 ? Math.round(ft) + ' ft' : (ft/5280).toFixed(2) + ' mi'; }
   function distFt(a, b){ return Math.hypot(a.e - b.e, a.n - b.n); }
@@ -1815,6 +1910,11 @@
     document.getElementById('gpsMinimap').style.display = showMap ? 'block' : 'none';
     updateGpsQualityUi();
     if(showMap){ renderMiniMap(); setTimeout(() => { if(miniMap) miniMap.invalidateSize(); }, 90); }
+    // Selecting a benchmark or closing the map changes how often the screen
+    // needs repainting — re-arm at the new cadence rather than waiting for the
+    // next OS fix to notice. Safe here: nothing on the refresh tick calls back
+    // into updateGpsUi, so the interval can't be reset out of existence.
+    if(gpsRefreshTimer !== null) armGpsRefresh();
   }
 
   // Fix-quality surface — cheap, so it can run on every refresh tick without
@@ -2162,6 +2262,18 @@
     clearTimeout(gpsLocateTimer); gpsLocateTimer = null;
   }
 
+  // How often the UI re-reads phoneSP. Once a benchmark is committed and the map
+  // is closed, nothing on screen changes faster than the caption's age counter,
+  // so a 3-second repaint is pure battery burn on a phone that stays open in a
+  // pocket all day. The map and the picker still get the full rate.
+  function gpsRefreshMs(){
+    return (selectedBmId && !mapModalOpen) ? 15000 : 3000;
+  }
+  function armGpsRefresh(){
+    if(gpsRefreshTimer !== null) clearInterval(gpsRefreshTimer);
+    gpsRefreshTimer = setInterval(refreshGpsViews, gpsRefreshMs());
+  }
+
   function toggleGps(){
     if(gpsOn){
       stopGps();
@@ -2208,55 +2320,64 @@
       }
     }, 35000);
 
-    gpsWatchId = navigator.geolocation.watchPosition(
-      p => {
-        // Each fix from the OS — keep phoneSP fresh in real time.
-        phoneSP = LA_S.forward(p.coords.latitude, p.coords.longitude);
-        phoneLL = { lat: p.coords.latitude, lon: p.coords.longitude };
-        gpsAccuracyM = p.coords.accuracy;
-        gpsLastFix = Date.now();
-        if(!gpsOn){
-          // First successful fix — flip state to ON and start the 3s refresh.
-          gpsOn = true;
-          clearTimeout(gpsLocateTimer);
-          const btn = document.getElementById('gpsBtn');
-          btn.disabled = false;
-          btn.classList.add('on');
-          btn.textContent = '📍 GPS On';
-          updateGpsUi();
-        }
-        refreshGpsViews(); // render right away on every fix
-        // Guard against stacking multiple intervals.
-        if(gpsRefreshTimer === null){
-          gpsRefreshTimer = setInterval(refreshGpsViews, 3000);
-        }
-      },
-      err => {
-        // Only a permission denial is fatal. A timeout or temporary
-        // "position unavailable" is transient (signal dip, phone in pocket,
-        // walking past a building) — keep the watch + refresh alive so the
-        // next good fix recovers automatically. Killing GPS on every transient
-        // error was what made live distance/direction "stop working."
-        if(err.code === err.PERMISSION_DENIED){
-          stopGps();
-          gpsOn = false;
-          updateGpsUi();
-          const b = document.getElementById('gpsBtn');
-          b.disabled = false;
-          b.textContent = '📍 Sort by GPS';
-          b.classList.remove('on');
-          document.getElementById('gpsStatus').textContent =
-            'GPS permission denied — enable location access for this site in your browser settings.';
-        } else if(!gpsOn){
-          // No first fix yet — keep trying, just nudge the user.
-          document.getElementById('gpsStatus').textContent =
-            'Still locating… move out to open sky for a faster fix.';
-        }
-        // If GPS is already on, ignore the transient error and keep the last
-        // known position on screen; refreshGpsViews will flag it as stale.
-      },
-      { enableHighAccuracy: true, timeout: 30000, maximumAge: 3000 }
-    );
+    startGpsWatch();
+  }
+
+  const GPS_WATCH_OPTS = { enableHighAccuracy: true, timeout: 30000, maximumAge: 3000 };
+
+  // Split out of toggleGps so the watch can be dropped while the app is
+  // backgrounded and re-armed on return WITHOUT going back through the
+  // "Locating…" button takeover — the foreman never asked to restart GPS,
+  // the OS just suspended it.
+  function startGpsWatch(){
+    if(gpsWatchId !== null) return;
+    gpsWatchId = navigator.geolocation.watchPosition(onGpsFix, onGpsError, GPS_WATCH_OPTS);
+  }
+
+  function onGpsFix(p){
+    // Each fix from the OS — keep phoneSP fresh in real time.
+    phoneSP = LA_S.forward(p.coords.latitude, p.coords.longitude);
+    phoneLL = { lat: p.coords.latitude, lon: p.coords.longitude };
+    gpsAccuracyM = p.coords.accuracy;
+    gpsLastFix = Date.now();
+    if(!gpsOn){
+      // First successful fix — flip state to ON and start the refresh.
+      gpsOn = true;
+      clearTimeout(gpsLocateTimer);
+      const btn = document.getElementById('gpsBtn');
+      btn.disabled = false;
+      btn.classList.add('on');
+      btn.textContent = '📍 GPS On';
+      updateGpsUi();
+    }
+    refreshGpsViews(); // render right away on every fix
+    // Guard against stacking multiple intervals.
+    if(gpsRefreshTimer === null) armGpsRefresh();
+  }
+
+  function onGpsError(err){
+    // Only a permission denial is fatal. A timeout or temporary
+    // "position unavailable" is transient (signal dip, phone in pocket,
+    // walking past a building) — keep the watch + refresh alive so the
+    // next good fix recovers automatically. Killing GPS on every transient
+    // error was what made live distance/direction "stop working."
+    if(err.code === err.PERMISSION_DENIED){
+      stopGps();
+      gpsOn = false;
+      updateGpsUi();
+      const b = document.getElementById('gpsBtn');
+      b.disabled = false;
+      b.textContent = '📍 Sort by GPS';
+      b.classList.remove('on');
+      document.getElementById('gpsStatus').textContent =
+        'GPS permission denied — enable location access for this site in your browser settings.';
+    } else if(!gpsOn){
+      // No first fix yet — keep trying, just nudge the user.
+      document.getElementById('gpsStatus').textContent =
+        'Still locating… move out to open sky for a faster fix.';
+    }
+    // If GPS is already on, ignore the transient error and keep the last
+    // known position on screen; refreshGpsViews will flag it as stale.
   }
 
   // ===== Calc =====
@@ -2578,12 +2699,19 @@
     if(e === null) return;
     if(!confirm('Turn here?\n\nElevation ' + fmtElev(e) + ' becomes the benchmark for the next setup. ' +
                 'Backsight and foresight are cleared.')) return;
+    // Only the FIRST turn records where the run came from; every later turn is
+    // chained off the setup before it, not off the original benchmark.
+    if(turnCount === 0){
+      runOriginId = selectedBmId || (source === 'manual' ? 'manual entry' : '');
+    }
     turnCount += 1;
-    turnFromId = selectedBmId || (source === 'manual' ? 'manual entry' : '');
     document.getElementById('bmManual').value = fmtElev(e);
     setSource('manual');
     document.getElementById('bs').value = '';
     document.getElementById('fs').value = '';
+    // A pending undo belongs to the setup we just left — it would put a reading
+    // from the previous instrument position back on this one.
+    hideRodUndo('bs'); hideRodUndo('fs');
     document.querySelectorAll('.rod-widget').forEach(w => { if(w._setRod) w._setRod(0); });
     updateSetupTag();
     calc();
@@ -2615,13 +2743,52 @@
   }
   // "digits and at most one dot, optional leading minus" — the same idiom
   // appeared verbatim in three places and half of a fourth.
+  //
+  // Returns true when it threw away something that carried meaning. Typing the
+  // way a tape reads — 6-3/8 — used to come out the other side as the number
+  // 638, i.e. fifty-three feet of offset entered as six and three-eighths
+  // inches, with nothing on screen marking it. The stripping stays (these
+  // fields really are decimal-only) but it is no longer silent.
   function sanitizeDecimal(el, allowNeg){
-    const neg = allowNeg && el.value.trim().startsWith('-');
+    const raw = el.value.trim();
+    const neg = allowNeg && raw.startsWith('-');
     let v = el.value.replace(/[^0-9.]/g, '');
     const p = v.split('.');
-    if(p.length > 2) v = p[0] + '.' + p.slice(1).join('');
+    const extraDots = p.length > 2;
+    if(extraDots) v = p[0] + '.' + p.slice(1).join('');
     el.value = (neg ? '-' : '') + v;
+    // A fraction bar, a feet/inch mark, a dash that is not the leading sign, or
+    // a second decimal point. Stray letters are just fumbled keys and are not
+    // worth interrupting for.
+    const body = neg ? raw.slice(1) : raw;
+    return extraDots || /[\/'"]/.test(raw) || body.indexOf('-') !== -1;
   }
+
+  // A mangled entry is latched until the field is cleared. Without the latch the
+  // red mark blinks off on the very next keystroke — 6-3/8 flags on the dash and
+  // un-flags on the 3 — which is exactly when it needs to still be on screen.
+  // The app never guesses the intended value: 6-3/8 is 6.375 inches to one crew
+  // and six feet three inches to another, and a wrong guess here goes into the
+  // record looking like a measurement.
+  function flagMangledEntry(el, dropped){
+    if(dropped) el.dataset.mangled = '1';
+    if(el.value === '' || el.value === '-') delete el.dataset.mangled;
+    const bad = el.dataset.mangled === '1';
+    el.classList.toggle('bad-entry', bad);
+    el.setAttribute('aria-invalid', bad ? 'true' : 'false');
+    return bad;
+  }
+  // One note per tool, shown while any of its fields is flagged.
+  function updateFracNote(noteId, fieldIds){
+    const note = document.getElementById(noteId);
+    if(!note) return;
+    const any = fieldIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.dataset.mangled === '1';
+    });
+    note.style.display = any ? 'block' : 'none';
+  }
+  const OFF_FIELD_IDS = ['offElev','offAmt0','offAmt1','offAmt2','offAmt3','offAmt4'];
   // Which recalculation a signed field belongs to. This is why offElevSign()
   // existed as a near-duplicate of signToggle(): the recalc call was hardcoded.
   const SIGNED_RECALC = {
@@ -2643,7 +2810,8 @@
   function onSlopeElevInput(id){
     const el = document.getElementById(id);
     if(!el) return;
-    sanitizeDecimal(el, true);
+    flagMangledEntry(el, sanitizeDecimal(el, true));
+    updateFracNote('slopeFracNote', ['slopeElevA','slopeElevB','slopePct']);
     updateSignBtn(id);
     slopeCalc();
   }
@@ -2704,11 +2872,15 @@
     saveState();
   }
   function onOffAmtInput(i){
-    sanitizeDecimal(document.getElementById('offAmt' + i), false);
+    const el = document.getElementById('offAmt' + i);
+    flagMangledEntry(el, sanitizeDecimal(el, false));
+    updateFracNote('offFracNote', OFF_FIELD_IDS);
     offsetCalc();
   }
   function onOffElevInput(){
-    sanitizeDecimal(document.getElementById('offElev'), true);
+    const el = document.getElementById('offElev');
+    flagMangledEntry(el, sanitizeDecimal(el, true));
+    updateFracNote('offFracNote', OFF_FIELD_IDS);
     updateSignBtn('offElev');
     offsetCalc();
   }
@@ -2739,8 +2911,13 @@
       const ft = (offUnit[i] === 'in') ? v / 12 : v;
       running += offDir[i] * ft;
       const sign = offDir[i] < 0 ? '\u2212' : '+';
+      // Echo an inches entry back as the tape fraction it stands for. The
+      // decimal is what the app needs; the fraction is what the guy is holding.
+      // Seeing "6.38 in (6\u215c\u2033)" confirms the conversion at the moment it matters
+      // and quietly teaches the one it wants next time.
+      const echo = (offUnit[i] === 'in') ? (' <span class="off-step-frac">' + inFrac(v) + '</span>') : '';
       rows += '<div class="off-step"><span class="off-step-lbl">' + step + '</span>' +
-              '<span class="off-step-off">' + sign + ' ' + v + ' ' + offUnit[i] + '</span>' +
+              '<span class="off-step-off">' + sign + ' ' + v + ' ' + offUnit[i] + echo + '</span>' +
               '<span class="off-step-elev">' + running.toFixed(2) + '</span></div>';
     }
     body.innerHTML = rows;
@@ -3016,6 +3193,14 @@
                 'and the setup count resets. Saved shots are kept.')) return;
     resetFieldIds().forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     signedFieldIds().forEach(updateSignBtn);
+    // A cleared field cannot still hold a mangled entry.
+    document.querySelectorAll('input[data-mangled]').forEach(el => {
+      delete el.dataset.mangled;
+      el.classList.remove('bad-entry');
+      el.setAttribute('aria-invalid', 'false');
+    });
+    updateFracNote('offFracNote', OFF_FIELD_IDS);
+    updateFracNote('slopeFracNote', ['slopeElevA','slopeElevB','slopePct']);
     // reset vertical-offset rows to defaults (down / inches, blank)
     for(let i = 0; i < OFF_N; i++){
       offDir[i] = -1; offUnit[i] = 'in';
@@ -3026,7 +3211,8 @@
     }
     selectedBmId = null;
     gpsWasUsedForSelection = false;
-    turnCount = 0; turnFromId = '';
+    turnCount = 0; runOriginId = '';
+    hideRodUndo('bs'); hideRodUndo('fs');
     updateSetupTag();
     renderBmPicker();
     // re-position both rod widgets to 0
@@ -3125,7 +3311,7 @@
     stateTimer = setTimeout(() => {
       const st = { v: 2, savedAt: Date.now(),
                    source, lastLevelSource, slopeGoal, distMode, pipeMode,
-                   selectedBmId, shotSide, gpsWasUsedForSelection, turnCount, turnFromId,
+                   selectedBmId, shotSide, gpsWasUsedForSelection, turnCount, runOriginId,
                    offDir: offDir.slice(), offUnit: offUnit.slice(), inputs: {} };
       persistFieldIds().forEach(id => {
         const el = document.getElementById(id);
@@ -3182,7 +3368,11 @@
       // while the GPS-suggested benchmark it warned about came back selected.
       gpsWasUsedForSelection = !!st.gpsWasUsedForSelection && !!selectedBmId;
       turnCount  = (typeof st.turnCount === 'number' && st.turnCount >= 0) ? st.turnCount : 0;
-      turnFromId = typeof st.turnFromId === 'string' ? st.turnFromId : '';
+      // st.turnFromId is the pre-1.06 name. For a run already in progress it held
+      // the same value runOriginId wants, so carrying it over keeps a mid-run
+      // upgrade from losing the origin.
+      runOriginId = typeof st.runOriginId === 'string' ? st.runOriginId
+                  : (typeof st.turnFromId === 'string' ? st.turnFromId : '');
       updateSetupTag();
       // Shot-log side toggle (only valid with an offset present)
       updateSideAvailability();
@@ -3244,6 +3434,19 @@
     announce('Warning: phone storage is blocked. Shots are held in memory only. Export now.', true);
   }
 
+  // Every shot carries its own identity so export state can be tracked per
+  // record instead of by counting. The old scheme stored only "N shots were
+  // exported at T" and compared it against the current length, which is only
+  // correct if the log is append-only — delete two shots and take two more and
+  // the count matches again, so the app reported a clean backup for two shots
+  // that had never left the phone, and Clear All skipped its warning.
+  let shotIdSeq = 0;
+  function newShotId(){
+    shotIdSeq += 1;
+    return Date.now().toString(36) + '-' + shotIdSeq.toString(36) +
+           '-' + Math.random().toString(36).slice(2, 7);
+  }
+
   function getShots(){
     if(!lsWritable) return shotsMem;   // storage already proved unreliable
     try {
@@ -3251,6 +3454,23 @@
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];   // corrupt/old shape must not break .push
     } catch(e){ return shotsMem; }
+  }
+
+  // Pre-1.06 shots have neither id nor export state. Ids are minted so they can
+  // be tracked from here on; `exported` is deliberately left unset, which reads
+  // as "not exported". That over-warns once for a crew who really had exported
+  // everything — and the alternative, trusting the old count, is exactly the
+  // bug being fixed: it would mark genuinely-unbacked-up shots as safe.
+  function migrateShotIds(){
+    const shots = getShots();
+    if(!shots.length) return;
+    let changed = false;
+    shots.forEach(s => { if(!s.id){ s.id = newShotId(); changed = true; } });
+    if(changed) setShots(shots);
+  }
+
+  function unexportedCount(shots){
+    return (shots || getShots()).filter(s => !s.exported).length;
   }
   function setShots(shots){
     shotsMem = shots;
@@ -3413,10 +3633,16 @@
     }
     // The benchmark id was never cleared when switching to Manual, so a shot
     // keyed by hand was stamped with the last benchmark picked from the list.
+    // On a turned setup the known elevation came from the PREVIOUS setup, not
+    // from the run's original benchmark — say both, so the office can rebuild
+    // the chain instead of reading four setups as four ties to one monument.
     const bmLabel = (source === 'manual')
-      ? (turnCount > 0 ? ('turn from ' + (turnFromId || 'previous setup')) : 'manual entry')
+      ? (turnCount > 0
+          ? ('TP from setup ' + turnCount + ' (run origin ' + (runOriginId || 'manual entry') + ')')
+          : 'manual entry')
       : (selectedBmId || '');
     const shot = {
+      id: newShotId(),
       job: job,
       station: station,
       offset: offset,
@@ -3463,11 +3689,18 @@
   }
 
   function clearShots(){
-    const n = getShots().length;
+    const shots = getShots();
+    const n = shots.length;
     if(n === 0) return;
-    const stamp = getExportStamp();
-    const warn = (!stamp || stamp.n < n)
-      ? '\n\nWARNING: these shots have NOT been exported yet. Deleting them loses the only copy.'
+    const pending = unexportedCount(shots);
+    // The warning is driven by the shots themselves now. Under the old count
+    // comparison, deleting some shots and taking the same number again hid this
+    // warning entirely — the one case where it most needed to fire.
+    const warn = pending
+      ? ('\n\nWARNING: ' + pending + ' of them have NOT been exported. ' +
+         'Deleting loses the only copy.' +
+         (pending < n ? '\n\nUse "Clear exported" to delete just the ' + (n - pending) +
+                        ' that are backed up.' : ''))
       : '';
     if(confirm('Delete ALL ' + n + ' saved shots? This cannot be undone.' + warn)){
       setShots([]);
@@ -3476,12 +3709,33 @@
     }
   }
 
+  // Clear only what is provably backed up. The all-or-nothing button meant a
+  // long day ended with a full list and no safe way to trim it, so the habit
+  // became clearing everything right after an export and hoping the export
+  // landed.
+  function clearExportedShots(){
+    const shots = getShots();
+    const done = shots.filter(s => s.exported);
+    if(!done.length){
+      alert('Nothing to clear — none of these shots have been exported yet.');
+      return;
+    }
+    const keep = shots.filter(s => !s.exported);
+    if(!confirm('Delete the ' + done.length + ' shot(s) already exported?\n\n' +
+                keep.length + ' not-yet-exported shot(s) will stay on the phone.')) return;
+    setShots(keep);
+    renderShots();
+    announce(done.length + ' exported shots cleared. ' + keep.length + ' remaining.', true);
+  }
+
   function renderShots(){
     const shots = getShots();
     document.getElementById('shotsCount').textContent = shots.length;
     const strip = document.getElementById('shotsCountStrip');
     if(strip) strip.textContent = shots.length;
     renderExportStamp();
+    const clearExp = document.getElementById('clearExportedBtn');
+    if(clearExp) clearExp.disabled = !shots.some(s => s.exported);
     const listEl = document.getElementById('shotsList');
     listEl.innerHTML = '';
     if(shots.length === 0){
@@ -3490,9 +3744,11 @@
     }
     shots.forEach((s, idx) => {
       const row = document.createElement('div');
-      row.className = 'shot-row';
+      // Per-row backup state, so "which of these is safe to delete" is answered
+      // on the list rather than inferred from a single summary line.
+      row.className = 'shot-row' + (s.exported ? ' shot-exported' : '');
       const sideShort = s.side === 'Left' ? 'L' : (s.side === 'Right' ? 'R' : '');
-      const num = '#' + (idx + 1);
+      const num = '#' + (idx + 1) + (s.exported ? ' <span class="shot-sent" title="Exported">✓</span>' : '');
       const desc = s.description ? escapeHtml(s.description) : '<span class="shot-nodesc">(no description)</span>';
       const sub = [];
       if(s.station)   sub.push('Sta ' + escapeHtml(s.station));
@@ -3530,25 +3786,36 @@
       return (p && typeof p.n === 'number') ? p : null;
     } catch(e){ return null; }
   }
-  function setExportStamp(n){
-    try { localStorage.setItem(EXPORT_KEY, JSON.stringify({ at: Date.now(), n: n })); } catch(e){}
-    renderExportStamp();
+  // Records WHICH shots went out, not how many. The id list is re-read from
+  // storage at mark time so a shot saved while the share sheet was open is not
+  // swept up as exported.
+  function setExportStamp(exportedIds){
+    const ids = new Set(exportedIds);
+    const at = Date.now();
+    const shots = getShots();
+    shots.forEach(s => { if(s.id && ids.has(s.id) && !s.exported) s.exported = at; });
+    setShots(shots);
+    try { localStorage.setItem(EXPORT_KEY, JSON.stringify({ at: at, n: ids.size })); } catch(e){}
+    renderShots();
   }
   function renderExportStamp(){
     const el = document.getElementById('exportStamp');
     if(!el) return;
-    const n = getShots().length;
+    const shots = getShots();
+    const n = shots.length;
+    const pending = unexportedCount(shots);
     const s = getExportStamp();
     if(n === 0 && !s){ el.className = 'export-stamp'; el.textContent = '—'; return; }
-    if(!s){ el.className = 'export-stamp never'; el.textContent = 'NEVER EXPORTED'; return; }
-    const d = new Date(s.at);
+    if(!s && pending){ el.className = 'export-stamp never'; el.textContent = 'NEVER EXPORTED'; return; }
+    if(pending){
+      el.className = 'export-stamp never';
+      el.textContent = pending + ' NOT EXPORTED';
+      return;
+    }
+    const d = new Date(s ? s.at : Date.now());
     const p = x => String(x).padStart(2, '0');
-    const when = p(d.getHours()) + ':' + p(d.getMinutes());
-    const behind = n > s.n;
-    el.className = 'export-stamp ' + (behind ? 'never' : 'ok');
-    el.textContent = behind
-      ? ((n - s.n) + ' NEW SINCE EXPORT')
-      : ('exported ' + s.n + ' at ' + when);
+    el.className = 'export-stamp ok';
+    el.textContent = 'all ' + n + ' exported · ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
   function csvField(v){
@@ -3604,7 +3871,7 @@
         });
         // The sheet closing is not proof of delivery, so the stamp says what was
         // handed off, not that it arrived.
-        setExportStamp(shots.length);
+        setExportStamp(shots.map(s => s.id));
         announce(shots.length + ' shots shared', true);
         return;
       }
@@ -3624,7 +3891,7 @@
             '\n\nDo NOT clear the shot log — screenshot the list or try another browser first.');
       return;
     }
-    setExportStamp(shots.length);
+    setExportStamp(shots.map(s => s.id));
     if(!confirm('CSV saved: ' + filename + ' (' + shots.length + ' shots).\n\nOpen email now to attach it?')) return;
     const subject = encodeURIComponent('Survey Shots — Site Level Calculator');
     const body = encodeURIComponent(
@@ -3706,6 +3973,52 @@
   const ROD_PX_PER_FT = 240;
   const ROD_MAX_FT    = 50;
   const ROD_STRIP_H   = ROD_MAX_FT * ROD_PX_PER_FT; // 12000
+  // Finger travel before a touch counts as a drag rather than a tap. 8 px is
+  // roughly a third of a hundredth of a foot at the inline scale, so nothing a
+  // foreman aims at is lost, while a resting glove no longer edits the reading.
+  const ROD_DRAG_SLOP = 8;
+
+  // ----- Undo the last drag -------------------------------------------------
+  // Bound to the hint line under each rod, which is already reserved space, so
+  // offering the undo shifts nothing on screen.
+  let rodUndoTimer = null;
+  let rodUndoFor = '';
+  function offerRodUndo(inputId, prevRaw){
+    const hint = document.querySelector('.rod-hint[data-rod="' + inputId + '"]');
+    if(!hint) return;
+    const btn = hint.querySelector('.rod-undo');
+    const txt = hint.querySelector('.rod-hint-text');
+    if(!btn || !txt) return;
+    btn.textContent = '↺ Undo — back to ' + (prevRaw === '' ? 'blank' : prevRaw);
+    btn.dataset.prev = prevRaw;
+    btn.hidden = false;
+    txt.hidden = true;
+    rodUndoFor = inputId;
+    clearTimeout(rodUndoTimer);
+    rodUndoTimer = setTimeout(() => hideRodUndo(inputId), 10000);
+  }
+  function hideRodUndo(inputId){
+    const hint = document.querySelector('.rod-hint[data-rod="' + inputId + '"]');
+    if(!hint) return;
+    const btn = hint.querySelector('.rod-undo');
+    const txt = hint.querySelector('.rod-hint-text');
+    if(btn) btn.hidden = true;
+    if(txt) txt.hidden = false;
+    if(rodUndoFor === inputId) rodUndoFor = '';
+  }
+  function undoRodDrag(inputId){
+    const hint = document.querySelector('.rod-hint[data-rod="' + inputId + '"]');
+    const btn = hint && hint.querySelector('.rod-undo');
+    const input = document.getElementById(inputId);
+    if(!btn || !input) return;
+    input.value = btn.dataset.prev || '';
+    syncRods(inputId);
+    calc();
+    saveState();
+    hideRodUndo(inputId);
+    announce((inputId === 'bs' ? 'Backsight' : 'Foresight') + ' restored to ' +
+             (input.value === '' ? 'blank' : input.value));
+  }
 
   // ----- Rod face -----------------------------------------------------------
   // Geometry measured off a photograph of the crew's own fibreglass rod
@@ -3853,8 +4166,9 @@
     widget._refresh = function(){ applyToRod(getInputValue()); };
     (rodWidgets[inputId] = rodWidgets[inputId] || []).push(widget);
 
-    // Typing in the input → every rod on that input follows
-    input.addEventListener('input', () => syncRods(inputId));
+    // Typing in the input → every rod on that input follows. A typed value also
+    // retires any pending undo: it would restore a reading two edits old.
+    input.addEventListener('input', () => { syncRods(inputId); hideRodUndo(inputId); });
 
     // Writes a dragged reading back to the input and to every bound rod.
     function commit(r){
@@ -3864,16 +4178,29 @@
     }
 
     // Drag the rod → input follows
-    let dragging = false, startY = 0, startReading = 0, moved = 0;
+    let dragging = false, startY = 0, startReading = 0, moved = 0, engaged = false, startRaw = '';
     function down(y){
-      dragging = true; moved = 0;
+      dragging = true; moved = 0; engaged = false;
       startY = y;
+      startRaw = input.value;
       startReading = getInputValue();
     }
     function move(y){
       if(!dragging) return;
-      const dy = y - startY;
+      let dy = y - startY;
       moved = Math.max(moved, Math.abs(dy));
+      // Nothing is committed until the finger has actually travelled. Every
+      // pixel used to write straight through, so resting a glove on the rod
+      // while reaching for the keypad silently rewrote the reading — a 3 px
+      // brush turned 5.20 into 5.21 with no sign anything had happened.
+      if(!engaged){
+        if(Math.abs(dy) < ROD_DRAG_SLOP) return;
+        engaged = true;
+        // Re-base past the slop so engaging does not jump the reading by the
+        // 8 px it took to get here; from here the rod tracks the finger 1:1.
+        startY += (dy > 0 ? ROD_DRAG_SLOP : -ROD_DRAG_SLOP);
+        dy = y - startY;
+      }
       // dy > 0 means finger moved down → reading increases.
       // The drag itself genuinely cannot run past the ends of the rod, so the
       // clamp stays here (not in getInputValue).
@@ -3887,6 +4214,9 @@
     function up(){
       if(!dragging) return;
       dragging = false;
+      if(!engaged) return;              // a tap — nothing was committed
+      engaged = false;
+      if(input.value !== startRaw) offerRodUndo(inputId, startRaw);
       saveState();
     }
 
@@ -3896,7 +4226,7 @@
     viewport.addEventListener('touchmove', e => {
       if(dragging && e.touches.length === 1){
         move(e.touches[0].clientY);
-        e.preventDefault(); // block page scroll while dragging the rod
+        if(engaged) e.preventDefault(); // block page scroll while dragging the rod
       }
     }, { passive: false });
     viewport.addEventListener('touchend', up);
@@ -3914,7 +4244,10 @@
       let lastTap = 0;
       viewport.addEventListener('touchend', () => {
         const now = Date.now();
-        if(moved <= 6 && now - lastTap < 400){ lastTap = 0; openRodZoom(inputId); }
+        // Same slop as the drag, so every touch is exactly one of the two:
+        // under 8 px it is a tap and can pair into a double-tap, at or over
+        // 8 px it was a drag and can never be mistaken for one.
+        if(moved < ROD_DRAG_SLOP && now - lastTap < 400){ lastTap = 0; openRodZoom(inputId); }
         else lastTap = now;
       });
       viewport.addEventListener('dblclick', e => { e.preventDefault(); openRodZoom(inputId); });
@@ -4060,9 +4393,9 @@
     setMainMode, setSource, setSlopeGoal, setDistMode, setPipeMode,
     signToggle, offDirToggle, offUnitToggle,
     toggleGps, openMapModal, closeMapModal, closeRodZoom,
-    resetAll, saveShot, clearShots, exportShots, exportPipe,
+    resetAll, saveShot, clearShots, clearExportedShots, exportShots, exportPipe,
     setSide, useElev, turnPoint,
-    toggleSun, toggleRods,
+    toggleSun, toggleRods, undoRodDrag,
     dismissInstallTip, dismissWhatsNew, dismissStale, applyUpdate
   };
   Object.keys(ACTIONS).forEach(k => {
@@ -4148,6 +4481,7 @@
     calc();
     slopeCalc();
     offsetCalc();
+    migrateShotIds();   // must run before the first render reads export state
     renderShots();
     showStaleBarIfNeeded();
     maybeShowWhatsNew();
@@ -4156,13 +4490,25 @@
     console.error('init render failed', err);
   }
 
-  // Pause the GPS refresh while backgrounded — neither the watch nor the
-  // interval used to stop, and the only visibilitychange handler did SW updates.
+  // Suspend GPS entirely while backgrounded. The previous version only stopped
+  // the repaint interval — the watchPosition kept the receiver running at high
+  // accuracy with the phone in a pocket, which is the single biggest battery
+  // draw in the app and does nothing for a screen nobody is looking at.
+  //
+  // The watch is re-armed directly (not via toggleGps) so returning to the app
+  // does not blank the button to "…" and re-run the 35-second locate timeout.
+  // gpsOn stays true across the gap, so the UI never flickers off; the fix just
+  // goes stale, and refreshGpsViews already labels a stale fix as such.
   document.addEventListener('visibilitychange', () => {
     if(document.hidden){
       if(gpsRefreshTimer !== null){ clearInterval(gpsRefreshTimer); gpsRefreshTimer = null; }
-    } else if(gpsOn && gpsRefreshTimer === null){
-      gpsRefreshTimer = setInterval(refreshGpsViews, 3000);
+      if(gpsOn && gpsWatchId !== null){
+        navigator.geolocation.clearWatch(gpsWatchId);
+        gpsWatchId = null;
+      }
+    } else if(gpsOn){
+      startGpsWatch();
+      if(gpsRefreshTimer === null) armGpsRefresh();
       refreshGpsViews();
     }
   });
@@ -4263,6 +4609,27 @@
     };
     ok('tenth bar reads its top edge',      tp[0] ? widestTop(tp[0]) : null, true);
     ok('half-tenth reads its bottom edge',  tp[1] ? widestTop(tp[1]) : null, false);
+
+    // Fraction guard: the mask still strips, but it now reports what it took.
+    const fp = document.createElement('input');
+    fp.value = '6-3/8';  ok('fraction flagged',        sanitizeDecimal(fp, false), true);
+    ok('fraction still stripped to digits', fp.value, '638');
+    fp.value = '6.375';  ok('clean decimal not flagged', sanitizeDecimal(fp, false), false);
+    fp.value = '-4.10';  ok('leading minus not flagged', sanitizeDecimal(fp, true),  false);
+    fp.value = '-4.10';  ok('minus dropped IS flagged',  sanitizeDecimal(fp, false), true);
+    fp.value = '4.1.0';  ok('second dot flagged',        sanitizeDecimal(fp, true),  true);
+    fp.value = "6'2";    ok('foot mark flagged',         sanitizeDecimal(fp, false), true);
+
+    // Inches → tape fraction, same eighths rounding as ftIn.
+    ok('inFrac eighths',  inFrac(6.375), '6⅜″');
+    ok('inFrac rounds',   inFrac(6.38),  '6⅜″');
+    ok('inFrac whole',    inFrac(6),     '6″');
+
+    // Export state is per shot, not a count. This is the exact sequence that
+    // used to report a clean backup for two shots that never left the phone.
+    const exp = [{id:'a',exported:1},{id:'b',exported:1},{id:'c'},{id:'d'}];
+    ok('unexported counted per shot', unexportedCount(exp), 2);
+    ok('count-based check would have said 0', exp.length - 4, 0);
 
     // Every wired action resolves, and every data-act in the markup is wired.
     const acts = Array.from(document.querySelectorAll('[data-act]')).map(el => el.dataset.act);
