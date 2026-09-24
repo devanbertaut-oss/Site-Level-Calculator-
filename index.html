@@ -822,16 +822,18 @@
   .tile-lbl{font-size:var(--fs-label); letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
-  /* Backsight / foresight, side by side. The .rod-widget inside each is the
-     v1.06 widget, untouched; the one thing that varies is the height of its
-     window onto the rod (--rod-vh, set by fitRods), so both fit on screen.
-     The zoom widget is not inside .rod-tile and always gets the full rod. */
-  .rod-pair{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-bottom:10px;}
-  .rod-pair .tile{margin-bottom:0; min-width:0;}
-  .rod-tile input{font-size:26px; padding:10px;}
-  .rod-sub{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.35; margin-top:5px;
+  /* Backsight over foresight. Each card is one row: the reading on the left,
+     the rod on the right. The .rod-widget is the v1.06 widget, untouched; the
+     one thing that varies is the height of its window onto the rod
+     (--rod-vh, set by fitRods) so both cards fit on screen. The zoom widget
+     is not inside .rod-tile and always gets the full rod. */
+  .rod-tile .rod-row{gap:12px;}
+  .rod-left{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+  .rod-left .lbl{margin-bottom:0;}
+  .rod-left input{flex:none; font-size:28px; padding:12px;}
+  .rod-left .rod-hint{margin-top:0;}
+  .rod-sub{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.35;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .rod-tile .rod-row{justify-content:center; margin-top:8px;}
   .rod-tile .rod-viewport{height:var(--rod-vh, 170px);}
 
   /* Benchmark folded to one row */
@@ -979,6 +981,10 @@
   /* fitRods() steps, only when the rods alone cannot make room. */
   .fit-1 .dock-msg, .fit-1 .bm-chip .tile-lbl{display:none;}
   .fit-2 .rod-tile .rod-hint-text{display:none;}
+  .fit-2 .rod-tile .rod-hint{min-height:0;}   /* Undo still appears here after a drag */
+  .fit-2 .rod-left{gap:4px;}
+  .fit-2 .tile{margin-bottom:6px;}
+  .fit-2 .rod-left input{font-size:22px; padding:6px 10px;}
   /* Short screens (iPhone SE/8 class): give the space to the two rods. The
      benchmark row above already says what the backsight is on. */
   /* Keyed to the same window height fitRods() sizes for (a class, not a
@@ -990,7 +996,7 @@
   .fit-short .wrap{padding-top:8px;}
   .fit-short .tile{padding:8px 10px;}
   .fit-short .rod-sub{display:none;}
-  .fit-short .rod-tile .rod-row{margin-top:6px;}
+  .fit-short .rod-left input{padding:9px 12px;}
   @media (min-width:820px){
     .wrap{max-width:680px;}
     .dock-inner{max-width:680px;}
@@ -1124,17 +1130,24 @@
   </section>
 
   <div id="levelingFields">
-    <!-- Backsight and foresight side by side, so with a benchmark chosen both
-         readings and both rods are on screen at once. Each rod widget is the
-         v1.06 widget, unchanged; only its window height can shrink to fit the
-         phone (fitRods), and double-tap still opens the full 2x rod. -->
-    <div class="rod-pair">
+    <!-- Backsight over foresight, as in the mockup: each card is one row,
+         reading on the left, rod on the right. Each .rod-widget is the v1.06
+         widget, unchanged; fitRods() only sets the height of its window onto
+         the rod so both cards fit on screen, and double-tap still opens the
+         full 2x rod. -->
+    <div class="rod-stack">
       <section class="tile rod-tile" id="bsTile">
-        <label class="lbl" for="bs"><span><b class="step-num">1</b> Backsight</span> <span class="abbr">BS +</span></label>
-        <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
-               data-persist data-reset oninput="calc()">
-        <div class="rod-sub" id="bsSub">Rod on the benchmark</div>
         <div class="rod-row">
+          <div class="rod-left">
+            <label class="lbl" for="bs"><span><b class="step-num">1</b> Backsight</span> <span class="abbr">BS +</span></label>
+            <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
+                   data-persist data-reset oninput="calc()">
+            <div class="rod-sub" id="bsSub">Rod on the benchmark</div>
+            <div class="rod-hint" data-rod="bs">
+              <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+              <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
+            </div>
+          </div>
           <div class="rod-widget" data-input="bs">
             <div class="rod-viewport">
               <div class="rod-strip"></div>
@@ -1143,17 +1156,19 @@
             </div>
           </div>
         </div>
-        <div class="rod-hint" data-rod="bs">
-          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
-        </div>
       </section>
       <section class="tile rod-tile" id="fsTile">
-        <label class="lbl" for="fs"><span><b class="step-num">2</b> Foresight</span> <span class="abbr">FS −</span></label>
-        <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
-               data-persist data-reset oninput="calc()">
-        <div class="rod-sub">Rod on the new point</div>
         <div class="rod-row">
+          <div class="rod-left">
+            <label class="lbl" for="fs"><span><b class="step-num">2</b> Foresight</span> <span class="abbr">FS −</span></label>
+            <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
+                   data-persist data-reset oninput="calc()">
+            <div class="rod-sub">Rod on the new point</div>
+            <div class="rod-hint" data-rod="fs">
+              <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+              <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
+            </div>
+          </div>
           <div class="rod-widget" data-input="fs">
             <div class="rod-viewport">
               <div class="rod-strip"></div>
@@ -1161,10 +1176,6 @@
               <div class="rod-oor-tag">OFF ROD</div>
             </div>
           </div>
-        </div>
-        <div class="rod-hint" data-rod="fs">
-          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
         </div>
       </section>
     </div>
@@ -1556,8 +1567,8 @@
           Step 1.</li>
         <li><b>Once you pick a benchmark it shrinks to one line</b> — its id, elevation and datum, with a
           <b>Change</b> button. The box you need to fill next is outlined in yellow.</li>
-        <li><b>Backsight and foresight sit side by side</b>, so both readings and both rods are on screen
-          without scrolling. On shorter phones the rod's window is a little shorter — same rod face, same
+        <li><b>Backsight and foresight both fit on one screen</b> — each is one card, reading on the left and
+          rod on the right, so both are visible and draggable without scrolling. On shorter phones the rod's window is a little shorter — same rod face, same
           ticks — and <b>double-tap</b> still opens it full height at 2×.</li>
         <li><b>→ Slope</b> in the bottom bar carries the elevation straight into Slope A.</li>
         <li><b>The rod is unchanged</b> — same face, same drag, same double-tap zoom.</li>
@@ -4738,7 +4749,7 @@
   function fitRods(){
     const root = document.documentElement;
     const chip = document.getElementById('bmChip');
-    const pair = document.querySelector('.rod-pair');
+    const pair = document.querySelector('.rod-stack');
     const dock = document.getElementById('dock');
     const vp = document.querySelector('#bsTile .rod-viewport');
     // Size for the SMALLEST window seen at this width while no field has
@@ -4754,25 +4765,39 @@
     const before = vp ? vp.clientHeight : 0;
     if(!folded || !pair || !vp || !dock || !vp.clientHeight){
       root.classList.remove('fit-1', 'fit-2');
+      fitRods.lastSig = '';
       if(root.style.getPropertyValue('--rod-vh')){ root.style.removeProperty('--rod-vh'); refreshRods(); }
       return;
     }
     if(document.body.classList.contains('typing')) return;
+    // Skip the search when nothing it depends on has changed; it runs from
+    // updateDock(), i.e. on every keystroke.
+    const sig = [fitScreen.h, window.innerWidth, pair.offsetTop, dock.offsetHeight,
+                 document.body.className, root.classList.contains('fit-short')].join('|');
+    if(sig === fitRods.lastSig) return;
     // How far the bottom of the two cards sits below the top of the dock,
     // with the page scrolled to the top.
     const over = () => pair.getBoundingClientRect().bottom + window.scrollY - (fitScreen.h - dock.offsetHeight - 8);
     const setVp = h => root.style.setProperty('--rod-vh', h + 'px');
-    // Step 0: full-height rods if they fit, else shorter rods (down to 90).
+    // Tallest rod window in [lo, hi] that fits (each card is as tall as the
+    // larger of its rod and its reading column, so this is not linear).
+    const tallestFitting = (lo, hi) => {
+      setVp(lo); if(over() > 0) return lo - 1;
+      while(lo < hi){ const mid = Math.ceil((lo + hi) / 2); setVp(mid); if(over() <= 0) lo = mid; else hi = mid - 1; }
+      return lo;
+    };
+    // Step 0: shorter rods, down to 90 px.
     root.classList.remove('fit-1', 'fit-2');
-    setVp(ROD_VP_MAX);
-    let o = over();
-    let want = ROD_VP_MAX - Math.max(0, o);
+    let want = tallestFitting(ROD_VP_SOFT_MIN, ROD_VP_MAX);
     // Step 1: drop the dock's working line and the benchmark kind label.
-    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-1'); setVp(ROD_VP_SOFT_MIN); want = ROD_VP_SOFT_MIN - over(); }
-    // Step 2: drop the drag/zoom hint text (its Undo button stays).
-    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-2'); setVp(ROD_VP_SOFT_MIN); want = ROD_VP_SOFT_MIN - over(); }
-    want = Math.max(ROD_VP_MIN, Math.min(ROD_VP_MAX, Math.floor(want)));
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-1'); want = tallestFitting(ROD_VP_SOFT_MIN, ROD_VP_MAX); }
+    // Step 2: drop the drag/zoom hint text (Undo stays), and let the rods go
+    // down to 50 px.
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-2'); want = tallestFitting(ROD_VP_MIN, ROD_VP_MAX); }
+    want = Math.max(ROD_VP_MIN, want);
     setVp(want);
+    fitRods.lastSig = [fitScreen.h, window.innerWidth, pair.offsetTop, dock.offsetHeight,
+                       document.body.className, root.classList.contains('fit-short')].join('|');
     if(want !== before) refreshRods();
   }
   window.addEventListener('resize', fitRods);
