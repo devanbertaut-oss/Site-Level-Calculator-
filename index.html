@@ -93,7 +93,7 @@
        insets keep it clear of the rounded corners in landscape. The hazard
        yellow still bleeds all the way to the edges, which is the point of
        viewport-fit=cover. */
-    padding:calc(16px + var(--sat)) calc(18px + var(--sar)) 14px calc(18px + var(--sal));
+    padding:calc(10px + var(--sat)) calc(16px + var(--sar)) 0 calc(16px + var(--sal));
     position:relative;
     border-bottom:4px solid #1c1e1f;
   }
@@ -521,7 +521,7 @@
   .setting-label{font-family:'Oswald',sans-serif; font-weight:600; font-size:var(--fs-hint);
     letter-spacing:1px; text-transform:uppercase; color:var(--ink-dim);}
   /* Sunlight toggle in the header, where it can be reached without scrolling. */
-  .sun-quick{position:absolute; top:calc(14px + var(--sat)); right:calc(14px + var(--sar)); background:transparent;
+  .sun-quick{flex:0 0 auto; background:transparent;
     border:2px solid #1c1e1f; border-radius:var(--r-sm); color:#1c1e1f;
     font-size:17px; line-height:1; padding:7px 9px; cursor:pointer;
     min-width:44px; min-height:44px;}
@@ -800,6 +800,162 @@
   body.sunlight .src-mode button.active{background:#0b62c4; color:#fff;}
   body.sunlight .side-toggle button.active{background:#6b5400; color:#fff;}
 
+  /* ===== v1.07 layout: header tabs, answer dock, save-shot sheet =====
+     Nothing in this block touches the rod widget. Its face, size, drag and
+     zoom are exactly the v1.06 rules above. */
+  .head-row{display:flex; align-items:center; gap:10px;}
+  .head-row .title{flex:1; min-width:0;}
+  /* The header is hazard yellow in both themes, so these are literal colours. */
+  header .setup-tag{flex:0 0 auto; margin:0; background:#1c1e1f; color:#f5c518;
+    font-size:12px; letter-spacing:1px; padding:5px 9px; border-radius:5px;}
+  .wrap{padding-top:12px;}
+
+  /* Tiles: one box per thing you fill in, as in the v1.07 mockup. They replace
+     the Step 1 / Step 2 cards and their headings and paragraphs of hints. */
+  .tile{background:var(--panel); border:2px solid var(--line); border-radius:var(--r-lg);
+    padding:10px 12px; margin-bottom:10px; transition:border-color .15s;}
+  .tile.next{border-color:var(--hazard-ink);}
+  .tile .lbl{margin-bottom:6px;}
+  .tile .field:last-child, .tile .field{margin-bottom:0;}
+  .tile-head{margin-bottom:10px !important;}
+  .step-num{font-family:'Oswald',sans-serif; font-size:14px; color:var(--hazard-ink); margin-right:5px;}
+  .tile-lbl{font-size:var(--fs-label); letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  /* Backsight over foresight. Each card is one row: the reading on the left,
+     the rod on the right. The .rod-widget is the v1.06 widget, untouched; the
+     one thing that varies is the height of its window onto the rod
+     (--rod-vh, set by fitRods) so both cards fit on screen. The zoom widget
+     is not inside .rod-tile and always gets the full rod. */
+  .rod-tile .rod-row{gap:12px;}
+  .rod-left{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+  .rod-left .lbl{margin-bottom:0;}
+  .rod-left input{flex:none; font-size:28px; padding:12px;}
+  .rod-left .rod-hint{margin-top:0;}
+  .rod-sub{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.35;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rod-tile .rod-viewport{height:var(--rod-vh, 170px);}
+
+  /* Benchmark folded to one row */
+  .bm-chip{display:flex; align-items:center; gap:12px;}
+  .chip-badge{flex:0 0 40px; height:40px; border-radius:50%; background:#f5c518; color:#1c1e1f;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:13px; letter-spacing:.5px;}
+  .chip-badge.tp{background:#6db3f5;}
+  .chip-main{flex:1; min-width:0;}
+  .chip-id{font-family:'Oswald',sans-serif; font-weight:600; font-size:20px; letter-spacing:.5px;
+    line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .chip-elev{color:var(--hazard-ink); margin-left:4px;}
+  .chip-meta{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.4; margin-top:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}   /* datum comes first, so it never truncates */
+  .chip-meta .unverified{color:var(--red); font-weight:700;}
+  .chip-change{flex:0 0 auto; min-height:44px; padding:0 14px; background:var(--bg);
+    border:2px solid var(--line); border-radius:var(--r-md); color:var(--ink); cursor:pointer;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:1px; text-transform:uppercase;}
+  .chip-change:active{background:var(--panel-2);}
+
+  /* % Slope: A and B side by side */
+  #slopeGoalToggle{margin-top:0;}
+  .tile-pair{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-bottom:12px;}
+  .tile-pair .tile{margin-bottom:0; padding:12px;}
+  .tile-pair .signed-row{gap:6px;}
+  .tile-pair .sign-btn{flex:0 0 42px; width:42px; font-size:24px;}
+  .tile-pair input[type=text]{font-size:20px; padding:12px 8px;}
+  .tile-pair .pct-wrap input{padding-right:28px;}
+  .tile-pair .pct-suffix{right:8px; font-size:18px;}
+  .pipe-field{margin-bottom:12px;}
+  .pipe-chips{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px;}
+  .pipe-chips button{min-height:44px; padding:0 2px; background:var(--bg); color:var(--ink-dim);
+    border:2px solid var(--line); border-radius:var(--r-md); cursor:pointer;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; letter-spacing:.5px; white-space:nowrap;}
+  .pipe-chips button.active{background:var(--panel-2); color:var(--hazard-ink); border-color:var(--hazard-ink);}
+  /* The dock shows these numbers; the cards are kept only as calc targets. */
+  #slopeResult, #offsetResult{display:none;}
+  .tool-tabs{display:flex; margin-top:10px;}
+  .tool-tabs button{flex:1 1 0; min-width:0; min-height:44px; background:transparent; color:#1c1e1f;
+    border:none; border-radius:8px 8px 0 0; padding:0 4px; cursor:pointer;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:14px;
+    letter-spacing:1.2px; text-transform:uppercase;}
+  .tool-tabs button.active{background:#1c1e1f; color:#f5c518;}
+  .tool-tabs button:not(.active):active{background:rgba(0,0,0,.12);}
+  .tool-tabs button:focus-visible{outline-color:#1c1e1f; outline-offset:-4px;}
+
+  /* HI now lives in the dock, so the in-card readout would be a second copy. */
+  #levelingFields .readout{display:none;}
+
+  /* The dock sits inside .wrap so the modals' inert covers it; fixed, so it
+     never scrolls. The body gets matching bottom padding from script. */
+  .dock{position:fixed; left:0; right:0; bottom:0; z-index:3000;
+    background:var(--panel); border-top:3px solid var(--line);
+    box-shadow:0 -6px 18px rgba(0,0,0,.35);
+    padding:8px calc(16px + var(--sar)) calc(10px + var(--sab)) calc(16px + var(--sal));}
+  .dock.ready{border-top-color:var(--green);}
+  .dock-inner{max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:6px;}
+  .dock-vals{display:flex; align-items:flex-end; gap:14px;}
+  .dock-sec{flex:0 0 auto; min-width:92px;}
+  .dock-main{flex:1; min-width:0; text-align:right;}
+  .dock-lbl{font-size:var(--fs-label); letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim);}
+  .dock-sec-val{font-family:'Oswald',sans-serif; font-weight:600; font-size:26px; line-height:1.1; color:var(--ink);}
+  .dock-main-val{font-family:'Oswald',sans-serif; font-weight:700; font-size:44px; line-height:1;
+    letter-spacing:-1px; color:#5a5f61; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .dock.ready .dock-main-val{color:var(--green);}
+  .dock-msg{font-size:var(--fs-hint); color:var(--hazard-ink); line-height:1.35; min-height:1.35em;}
+  .dock.ready .dock-msg{color:var(--ink-dim);}
+  .dock-actions{display:flex; gap:var(--sp-2);}
+  .dock-save{flex:2 1 0; min-height:52px; background:var(--hazard); color:#1c1e1f; border:none;
+    border-radius:var(--r-md); font-family:'Oswald',sans-serif; font-weight:700; font-size:16px;
+    letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; box-shadow:0 3px 0 var(--hazard-deep);}
+  .dock-save:active{transform:translateY(2px); box-shadow:0 1px 0 var(--hazard-deep);}
+  .dock-turn{flex:1 1 0; min-height:52px; background:transparent; border:2px solid var(--hazard);
+    border-radius:var(--r-md); color:var(--hazard-ink); font-family:'Oswald',sans-serif; font-weight:700;
+    font-size:15px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;}
+  .dock-turn:active{background:var(--panel-2);}
+  .dock-use{flex:1 1 0; min-height:52px; background:transparent; border:2px solid var(--blue);
+    border-radius:var(--r-md); color:var(--blue); font-family:'Oswald',sans-serif; font-weight:700;
+    font-size:14px; letter-spacing:.8px; text-transform:uppercase; cursor:pointer; padding:0 4px;}
+  .dock-use:active{background:var(--panel-2);}
+  .dock-turn, .dock-use{white-space:nowrap;}
+  .dock-turn:disabled, .dock-use:disabled{opacity:.4; cursor:not-allowed; border-color:var(--line); color:var(--ink-dim);}
+  .dock .shots-strip{margin:0; padding:0; background:none; border:none;}
+  /* Leveling-only controls; slope and offset keep the numbers and the strip. */
+  .dock.no-actions .dock-actions{display:none;}
+  /* While a field has focus the keyboard owns most of the screen: keep the
+     numbers, drop everything else. */
+  body.typing .dock-actions, body.typing .dock-msg, body.typing .dock .shots-strip{display:none;}
+  body.typing .dock{padding-bottom:10px;}
+  body.typing .dock-main-val{font-size:36px;}
+
+  /* Save-shot sheet */
+  .sheet-modal{position:fixed; inset:0; z-index:4100; display:flex; flex-direction:column;
+    justify-content:flex-end; background:rgba(10,11,12,.72);}
+  .sheet-card{width:100%; max-width:560px; margin:0 auto; max-height:92vh; overflow-y:auto;
+    background:var(--panel); border-top:3px solid var(--hazard); border-radius:16px 16px 0 0;
+    box-shadow:0 -10px 40px rgba(0,0,0,.5); padding-bottom:var(--sab);}
+  .sheet-grab{width:44px; height:5px; border-radius:3px; background:var(--line); margin:10px auto 0;}
+  .sheet-head{display:flex; align-items:center; gap:12px; padding:8px 16px 10px;
+    position:sticky; top:0; background:var(--panel); z-index:1;}
+  .sheet-head span:first-child{flex:1; font-family:'Oswald',sans-serif; font-weight:700; font-size:19px;
+    letter-spacing:1px; text-transform:uppercase;}
+  .sheet-elev{font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; color:var(--green);}
+  .sheet-elev.none{color:var(--red); font-size:15px;}
+  .sheet-body{padding:0 16px 16px;}
+  .sheet-meta{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.45; margin-bottom:12px;}
+  .sheet-meta b{color:var(--hazard-ink);}
+  .sheet-pair{display:flex; gap:10px;}
+  .sheet-pair .shot-field{flex:1 1 0; min-width:0;}
+  .sheet-body input[type=text]{font-size:20px; padding:11px 12px;}
+  .desc-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .desc-chips:empty{display:none;}
+  .desc-chip{min-height:40px; padding:0 13px; border-radius:20px; background:var(--panel-2);
+    border:1px solid var(--line); color:var(--ink); font-family:'Roboto Mono',monospace;
+    font-size:var(--fs-label); cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .desc-chip:active{background:var(--line);}
+  .sheet-btns{display:flex; gap:var(--sp-2); margin-top:14px;}
+  .sheet-btns .save-shot-btn{flex:2 1 0; margin-top:0;}
+  .sheet-cancel{flex:1 1 0; min-height:48px; background:transparent; border:2px solid var(--line);
+    border-radius:8px; color:var(--ink); font-family:'Oswald',sans-serif; font-weight:600;
+    font-size:14px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;}
+
   /* ===== Motion ===== */
   /* Six animations were declared `infinite` with no escape hatch, including the
      one on the default screen. */
@@ -817,14 +973,33 @@
      fallback sans is not condensed. */
   @media (max-width:390px){
     .src-mode button{font-size:11px; letter-spacing:.5px; padding:10px 2px;}
-    #pipeModeToggle{flex-wrap:wrap;}
-    #pipeModeToggle button{flex:1 1 50%;}
-    #pipeModeToggle button:nth-child(-n+2){border-bottom:2px solid var(--line);}
+    .pipe-chips button{font-size:12px; letter-spacing:0;}
+    .dock-turn, .dock-use{font-size:13px; letter-spacing:.3px;}
     .settings-block{flex-direction:column;}
     .use-btns button{flex:1 1 100%;}
   }
+  /* fitRods() steps, only when the rods alone cannot make room. */
+  .fit-1 .dock-msg, .fit-1 .bm-chip .tile-lbl{display:none;}
+  .fit-2 .rod-tile .rod-hint-text{display:none;}
+  .fit-2 .rod-tile .rod-hint{min-height:0;}   /* Undo still appears here after a drag */
+  .fit-2 .rod-left{gap:4px;}
+  .fit-2 .tile{margin-bottom:6px;}
+  .fit-2 .rod-left input{font-size:22px; padding:6px 10px;}
+  /* Short screens (iPhone SE/8 class): give the space to the two rods. The
+     benchmark row above already says what the backsight is on. */
+  /* Keyed to the same window height fitRods() sizes for (a class, not a
+     max-height query), so the two can never disagree when a browser's
+     toolbars slide in and out. */
+  .fit-short header{padding-top:calc(6px + var(--sat));}
+  .fit-short .tool-tabs{margin-top:6px;}
+  .fit-short .tool-tabs button{min-height:40px;}
+  .fit-short .wrap{padding-top:8px;}
+  .fit-short .tile{padding:8px 10px;}
+  .fit-short .rod-sub{display:none;}
+  .fit-short .rod-left input{padding:9px 12px;}
   @media (min-width:820px){
     .wrap{max-width:680px;}
+    .dock-inner{max-width:680px;}
     .result .r-big{font-size:64px;}
     .card .hint{font-size:var(--fs-sm);}
   }
@@ -832,13 +1007,23 @@
 </head>
 <body>
 <header>
-  <h1 class="title">Site Level Calculator</h1>
-  <div class="subtitle">By Watershed Project Team</div>
-  <!-- Sunlight is the one preference that gets flipped mid-task (a cloud moves),
-       so it needs to be reachable without scrolling to the settings block. -->
-  <button class="sun-quick" id="sunQuick" data-act="toggleSun"
-          aria-pressed="false" aria-label="Toggle sunlight high-contrast theme"
-          title="Sunlight mode">☀️</button>
+  <div class="head-row">
+    <h1 class="title">Site Level<span class="sr-only"> Calculator</span></h1>
+    <!-- Setup number, always in view: a turn changes the HI everything hangs off. -->
+    <span class="setup-tag" id="setupTag">Setup 1</span>
+    <!-- Sunlight is the one preference that gets flipped mid-task (a cloud moves),
+         so it needs to be reachable without scrolling to the settings block. -->
+    <button class="sun-quick" id="sunQuick" data-act="toggleSun"
+            aria-pressed="false" aria-label="Toggle sunlight high-contrast theme"
+            title="Sunlight mode">☀️</button>
+  </div>
+  <!-- The three tools are the app's top-level choice, so they are tabs here
+       rather than a toggle buried inside the Step 1 card. -->
+  <nav class="tool-tabs" role="group" aria-label="Tool">
+    <button id="main-level" class="active" data-act="setMainMode" data-arg="level" aria-pressed="true">Site Level</button>
+    <button id="main-slope" data-act="setMainMode" data-arg="slope" aria-pressed="false">% Slope</button>
+    <button id="main-offset" data-act="setMainMode" data-arg="offset" aria-pressed="false">Vert Offset</button>
+  </nav>
 </header>
 
 <!-- Single polite announcer for every computed result. Debounced in script, so
@@ -868,31 +1053,28 @@
     <button type="button" data-act="dismissStale">OK</button>
   </div>
 
-  <!-- One-time install suggestion (mobile browser only, hidden when installed) -->
-  <div class="install-tip" id="installTip" style="display:none;">
-    <div class="install-tip-head">📲 Add this tool to your home screen</div>
-    <div class="install-tip-body" id="installTipBody"></div>
-    <button class="install-tip-btn" data-act="dismissInstallTip">Got it</button>
-  </div>
   <!-- Bouncing pointer at the browser's menu button while the tip is showing -->
   <div class="install-arrow" id="installArrow" style="display:none;" aria-hidden="true">
     <span class="install-arrow-label" id="installArrowLabel">Tap here</span>
     <span class="install-arrow-glyph" id="installArrowGlyph">⬇</span>
   </div>
 
-  <!-- STEP 1 -->
-  <div class="card">
-    <span class="step-tag" id="step1Tag">Step 1 · Set HI</span>
-    <!-- The setup tag is a SIBLING of the heading, not a child: setSource()
-         rewrites step1Title.textContent per mode, which would destroy it. -->
-    <h2 id="step1Title">Benchmark / Known Elevation</h2><span class="setup-tag" id="setupTag" style="display:none;">Setup 1</span>
-    <div class="hint" id="step1Hint">Pick a benchmark from the list, or key in a known elevation. Then shoot a backsight on it. HI = BM Elev + Backsight.</div>
-
-    <div class="src-mode" role="group" aria-label="Tool">
-      <button id="main-level" class="active" data-act="setMainMode" data-arg="level" aria-pressed="true">Site Level</button>
-      <button id="main-slope" data-act="setMainMode" data-arg="slope" aria-pressed="false">% Slope</button>
-      <button id="main-offset" data-act="setMainMode" data-arg="offset" aria-pressed="false">Vert Offset</button>
+  <!-- ============ SITE LEVEL ============ -->
+  <!-- Benchmark, collapsed: once one is chosen it is a single row with its
+       datum and a Change button, so both rods fit on screen. -->
+  <section class="tile bm-chip" id="bmChip" style="display:none;" aria-label="Benchmark in use">
+    <div class="chip-badge" id="chipBadge" aria-hidden="true">BM</div>
+    <div class="chip-main">
+      <div class="tile-lbl" id="chipKind">Benchmark</div>
+      <div class="chip-id"><span id="chipId">—</span> <span class="chip-elev" id="chipElev"></span></div>
+      <div class="chip-meta" id="chipMeta"></div>
     </div>
+    <button type="button" class="chip-change" data-act="openBmPicker">Change</button>
+  </section>
+
+  <!-- Benchmark, open: the full picker while choosing. -->
+  <section class="tile" id="bmPickTile">
+    <div class="lbl tile-head"><span>Benchmark / known elevation</span> <span class="abbr">BM</span></div>
     <div class="src-mode submode" id="levelSubMode" role="group" aria-label="Elevation source">
       <button id="src-db" class="active" data-act="setSource" data-arg="db" aria-pressed="true">Choose Benchmark</button>
       <button id="src-manual" data-act="setSource" data-arg="manual" aria-pressed="false">Manual</button>
@@ -944,124 +1126,28 @@
                data-persist data-reset oninput="calc()">
       </div>
     </div>
+    <button type="button" class="bm-change" id="bmKeepBtn" data-act="closeBmPicker" style="display:none;"></button>
+  </section>
 
-    <!-- SLOPE view -->
-    <div id="slopeView" style="display:none;">
-      <div class="src-mode submode" id="slopeGoalToggle" role="group" aria-label="Slope goal">
-        <button type="button" id="goal-slope" class="active" data-act="setSlopeGoal" data-arg="slope" aria-pressed="true">Find Slope %</button>
-        <button type="button" id="goal-elev" data-act="setSlopeGoal" data-arg="elev" aria-pressed="false">Find Elevation</button>
-      </div>
-      <div class="field">
-        <label class="lbl" for="slopeElevA">Elevation A (start) <span class="abbr">ELEV A</span></label>
-        <div class="signed-row">
-          <button type="button" class="sign-btn" id="signBtn-slopeElevA" data-act="signToggle" data-arg="slopeElevA" aria-label="Toggle negative for Elevation A">+</button>
-          <input type="text" id="slopeElevA" inputmode="decimal" placeholder="0.00"
-                 data-persist data-reset data-signed oninput="onSlopeElevInput('slopeElevA')">
-        </div>
-      </div>
-      <div class="field" id="elevBField">
-        <label class="lbl" for="slopeElevB">Elevation B (end) <span class="abbr">ELEV B</span></label>
-        <div class="signed-row">
-          <button type="button" class="sign-btn" id="signBtn-slopeElevB" data-act="signToggle" data-arg="slopeElevB" aria-label="Toggle negative for Elevation B">+</button>
-          <input type="text" id="slopeElevB" inputmode="decimal" placeholder="0.00"
-                 data-persist data-reset data-signed oninput="onSlopeElevInput('slopeElevB')">
-        </div>
-      </div>
-      <div class="field" id="slopePctField" style="display:none;">
-        <label class="lbl" for="slopePct">Known Slope <span class="abbr">% (− falls)</span></label>
-        <div class="signed-row">
-          <button type="button" class="sign-btn" id="signBtn-slopePct" data-act="signToggle" data-arg="slopePct" aria-label="Toggle negative slope">+</button>
-          <div class="pct-wrap">
-            <input type="text" id="slopePct" inputmode="decimal" placeholder="0.00"
-                   data-persist data-reset data-signed oninput="onSlopeElevInput('slopePct')">
-            <span class="pct-suffix" aria-hidden="true">%</span>
-          </div>
-        </div>
-      </div>
-      <div class="frac-note" id="slopeFracNote" role="alert" style="display:none;">
-        ⚠ <b>Fractions are not accepted here</b> — enter decimal feet.
-        <div class="frac-keys">
-          <span class="frac-key lead">6-3/8″ = <b>0.53</b> ft</span>
-          <span class="frac-key">1″ = .08</span><span class="frac-key">3″ = .25</span>
-          <span class="frac-key">6″ = .5</span><span class="frac-key">9″ = .75</span>
-        </div>
-      </div>
-      <div class="field" role="group" aria-labelledby="distLbl">
-        <div class="lbl" id="distLbl">Horizontal Distance A → B <span class="abbr">DIST</span></div>
-        <div class="src-mode" id="distModeToggle" style="margin-bottom:10px;" role="group" aria-label="Distance entry mode">
-          <button type="button" id="dist-direct" class="active" data-act="setDistMode" data-arg="direct" aria-pressed="true">Direct (ft)</button>
-          <button type="button" id="dist-station" data-act="setDistMode" data-arg="station" aria-pressed="false">Station → Station</button>
-        </div>
-        <!-- Direct feet entry -->
-        <div id="distDirectView">
-          <label class="sr-only" for="slopeDist">Horizontal distance A to B, in feet</label>
-          <input type="number" id="slopeDist" inputmode="decimal" min="0" placeholder="0.00"
-                 data-persist data-reset oninput="slopeCalc()">
-        </div>
-        <!-- Station-to-station entry (same mask as the shot log) -->
-        <div id="distStationView" style="display:none;">
-          <div class="sta-row">
-            <div class="sta-col">
-              <label class="lbl-sm" for="slopeStaA">Station A <span class="abbr">#####+##</span></label>
-              <input type="text" id="slopeStaA" inputmode="decimal" maxlength="11" placeholder="0+00"
-                     data-persist data-reset
-                     oninput="onStationInput(this); slopeCalc();" onblur="onStationBlur(this); slopeCalc();">
-            </div>
-            <div class="sta-col">
-              <label class="lbl-sm" for="slopeStaB">Station B <span class="abbr">#####+##</span></label>
-              <input type="text" id="slopeStaB" inputmode="decimal" maxlength="11" placeholder="0+00"
-                     data-persist data-reset
-                     oninput="onStationInput(this); slopeCalc();" onblur="onStationBlur(this); slopeCalc();">
-            </div>
-          </div>
-          <div class="sta-dist-readout" id="staDistReadout">Distance: — ft</div>
-        </div>
-      </div>
-
-      <!-- Pipe invert option (off by default) -->
-      <div class="field" role="group" aria-labelledby="pipeLbl">
-        <div class="lbl" id="pipeLbl">Pipe Inverts (optional) <span class="abbr">STICKS</span></div>
-        <div class="src-mode" id="pipeModeToggle">
-          <button type="button" id="pipe-off" class="active" data-act="setPipeMode" data-arg="off" aria-pressed="true">Off</button>
-          <button type="button" id="pipe-concrete" data-act="setPipeMode" data-arg="concrete" aria-pressed="false">Concrete 8′</button>
-          <button type="button" id="pipe-sewer" data-act="setPipeMode" data-arg="sewer" aria-pressed="false">Sewer 14′</button>
-          <button type="button" id="pipe-hppp" data-act="setPipeMode" data-arg="hppp" aria-pressed="false">HPPP 20′</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- VERTICAL OFFSET view -->
-    <div id="offsetView" style="display:none;">
-      <div class="field">
-        <label class="lbl" for="offElev">Known Elevation <span class="abbr">ELEV</span></label>
-        <div class="signed-row">
-          <button type="button" class="sign-btn" id="signBtn-offElev" data-act="signToggle" data-arg="offElev" aria-label="Toggle negative">+</button>
-          <input type="text" id="offElev" inputmode="decimal" placeholder="0.00"
-                 data-persist data-reset data-signed oninput="onOffElevInput()">
-        </div>
-      </div>
-      <div class="lbl" id="offRowsLbl" style="margin-top:4px;">Offsets (stack top → down) <span class="abbr">± FT / IN</span></div>
-      <div class="off-rows" id="offRows" role="group" aria-labelledby="offRowsLbl"></div>
-      <div class="frac-note" id="offFracNote" role="alert" style="display:none;">
-        ⚠ <b>Fractions are not accepted here</b> — enter the decimal.
-        <div class="frac-keys">
-          <span class="frac-key lead">6-3/8″ = <b>6.375</b> in</span>
-          <span class="frac-key">⅛ = .125</span><span class="frac-key">¼ = .25</span>
-          <span class="frac-key">⅜ = .375</span><span class="frac-key">½ = .5</span>
-          <span class="frac-key">⅝ = .625</span><span class="frac-key">¾ = .75</span>
-          <span class="frac-key">⅞ = .875</span>
-        </div>
-      </div>
-      <div class="off-hint">Each offset stacks on the one above. Toggle <b>−/+</b> for down/up and <b>in/ft</b> per row.</div>
-    </div>
-
-    <!-- Leveling-only fields: backsight + HI readout. Hidden in Slope mode. -->
-    <div id="levelingFields">
-      <div class="field" style="margin-top:12px;">
-        <label class="lbl" for="bs">Backsight (rod on benchmark) <span class="abbr">BS / +S</span></label>
+  <div id="levelingFields">
+    <!-- Backsight over foresight, as in the mockup: each card is one row,
+         reading on the left, rod on the right. Each .rod-widget is the v1.06
+         widget, unchanged; fitRods() only sets the height of its window onto
+         the rod so both cards fit on screen, and double-tap still opens the
+         full 2x rod. -->
+    <div class="rod-stack">
+      <section class="tile rod-tile" id="bsTile">
         <div class="rod-row">
-          <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
-                 data-persist data-reset oninput="calc()">
+          <div class="rod-left">
+            <label class="lbl" for="bs"><span><b class="step-num">1</b> Backsight</span> <span class="abbr">BS +</span></label>
+            <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
+                   data-persist data-reset oninput="calc()">
+            <div class="rod-sub" id="bsSub">Rod on the benchmark</div>
+            <div class="rod-hint" data-rod="bs">
+              <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+              <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
+            </div>
+          </div>
           <div class="rod-widget" data-input="bs">
             <div class="rod-viewport">
               <div class="rod-strip"></div>
@@ -1070,46 +1156,41 @@
             </div>
           </div>
         </div>
-        <div class="rod-hint" data-rod="bs">
-          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
+      </section>
+      <section class="tile rod-tile" id="fsTile">
+        <div class="rod-row">
+          <div class="rod-left">
+            <label class="lbl" for="fs"><span><b class="step-num">2</b> Foresight</span> <span class="abbr">FS −</span></label>
+            <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
+                   data-persist data-reset oninput="calc()">
+            <div class="rod-sub">Rod on the new point</div>
+            <div class="rod-hint" data-rod="fs">
+              <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+              <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
+            </div>
+          </div>
+          <div class="rod-widget" data-input="fs">
+            <div class="rod-viewport">
+              <div class="rod-strip"></div>
+              <div class="rod-crosshair"></div>
+              <div class="rod-oor-tag">OFF ROD</div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="readout">
-        <span class="ro-label">Height of Instrument</span>
-        <span class="ro-val dim" id="hi-out">— <span style="font-size:14px">HI</span></span>
-      </div>
+      </section>
+    </div>
+    <!-- HI is shown in the dock; this readout is kept only as calc()'s target. -->
+    <div class="readout" aria-hidden="true">
+      <span class="ro-label">Height of Instrument</span>
+      <span class="ro-val dim" id="hi-out">— <span style="font-size:14px">HI</span></span>
     </div>
   </div>
 
   <!-- LEVELING-ONLY SECTION (hidden in Slope mode) -->
   <div id="levelingSection">
 
-  <!-- STEP 2 -->
-  <div class="card">
-    <span class="step-tag">Step 2 · Shoot Point</span>
-    <h2>Unknown Point</h2>
-    <div class="hint">Take a rod reading on the point you want to know (foresight). Elev = HI − Foresight.</div>
-
-    <div class="field">
-      <label class="lbl" for="fs">Foresight (rod on point) <span class="abbr">FS / −S</span></label>
-      <div class="rod-row">
-        <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
-               data-persist data-reset oninput="calc()">
-        <div class="rod-widget" data-input="fs">
-          <div class="rod-viewport">
-            <div class="rod-strip"></div>
-            <div class="rod-crosshair"></div>
-            <div class="rod-oor-tag">OFF ROD</div>
-          </div>
-        </div>
-      </div>
-      <div class="rod-hint" data-rod="fs">
-        <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-        <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
-      </div>
-    </div>
+  <div class="formula">
+    <b>HI</b> = BM + BS &nbsp;·&nbsp; <b>Elev</b> = HI − FS
   </div>
 
   <!-- RESULT -->
@@ -1133,16 +1214,94 @@
       <button type="button" id="useSlopeB" data-act="useElev" data-arg="slopeElevB" disabled>→ Slope B</button>
       <button type="button" id="useOffElev" data-act="useElev" data-arg="offElev" disabled>→ Offset</button>
     </div>
-    <button type="button" class="turn-btn" id="turnBtn" data-act="turnPoint" disabled>
-      ↺ Turn / move the level up
-    </button>
-  </div>
-
-  <div class="formula">
-    <b>HI</b> = BM Elev + Backsight &nbsp;·&nbsp; <b>Elev</b> = HI − Foresight
   </div>
 
   </div><!-- /levelingSection -->
+
+  <!-- ============ % SLOPE ============ -->
+  <div id="slopeView" style="display:none;">
+    <div class="src-mode submode" id="slopeGoalToggle" role="group" aria-label="Slope goal">
+      <button type="button" id="goal-slope" class="active" data-act="setSlopeGoal" data-arg="slope" aria-pressed="true">Find Slope %</button>
+      <button type="button" id="goal-elev" data-act="setSlopeGoal" data-arg="elev" aria-pressed="false">Find Elevation</button>
+    </div>
+    <div class="tile-pair">
+      <section class="tile" id="elevAField">
+        <label class="lbl" for="slopeElevA">Elev A · start</label>
+        <div class="signed-row">
+          <button type="button" class="sign-btn" id="signBtn-slopeElevA" data-act="signToggle" data-arg="slopeElevA" aria-label="Toggle negative for Elevation A">+</button>
+          <input type="text" id="slopeElevA" inputmode="decimal" placeholder="0.00"
+                 data-persist data-reset data-signed oninput="onSlopeElevInput('slopeElevA')">
+        </div>
+      </section>
+      <section class="tile" id="elevBField">
+        <label class="lbl" for="slopeElevB">Elev B · end</label>
+        <div class="signed-row">
+          <button type="button" class="sign-btn" id="signBtn-slopeElevB" data-act="signToggle" data-arg="slopeElevB" aria-label="Toggle negative for Elevation B">+</button>
+          <input type="text" id="slopeElevB" inputmode="decimal" placeholder="0.00"
+                 data-persist data-reset data-signed oninput="onSlopeElevInput('slopeElevB')">
+        </div>
+      </section>
+      <section class="tile" id="slopePctField" style="display:none;">
+        <label class="lbl" for="slopePct">Known slope <span class="abbr">− falls</span></label>
+        <div class="signed-row">
+          <button type="button" class="sign-btn" id="signBtn-slopePct" data-act="signToggle" data-arg="slopePct" aria-label="Toggle negative slope">+</button>
+          <div class="pct-wrap">
+            <input type="text" id="slopePct" inputmode="decimal" placeholder="0.00"
+                   data-persist data-reset data-signed oninput="onSlopeElevInput('slopePct')">
+            <span class="pct-suffix" aria-hidden="true">%</span>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="frac-note" id="slopeFracNote" role="alert" style="display:none;">
+      ⚠ <b>Fractions are not accepted here</b> — enter decimal feet.
+      <div class="frac-keys">
+        <span class="frac-key lead">6-3/8″ = <b>0.53</b> ft</span>
+        <span class="frac-key">1″ = .08</span><span class="frac-key">3″ = .25</span>
+        <span class="frac-key">6″ = .5</span><span class="frac-key">9″ = .75</span>
+      </div>
+    </div>
+    <section class="tile" role="group" aria-labelledby="distLbl">
+      <div class="lbl" id="distLbl">Horizontal distance A → B <span class="abbr">DIST</span></div>
+      <div class="src-mode" id="distModeToggle" style="margin-bottom:10px;" role="group" aria-label="Distance entry mode">
+        <button type="button" id="dist-direct" class="active" data-act="setDistMode" data-arg="direct" aria-pressed="true">Direct (ft)</button>
+        <button type="button" id="dist-station" data-act="setDistMode" data-arg="station" aria-pressed="false">Station → Station</button>
+      </div>
+      <!-- Direct feet entry -->
+      <div id="distDirectView">
+        <label class="sr-only" for="slopeDist">Horizontal distance A to B, in feet</label>
+        <input type="number" id="slopeDist" inputmode="decimal" min="0" placeholder="0.00"
+               data-persist data-reset oninput="slopeCalc()">
+      </div>
+      <!-- Station-to-station entry (same mask as the shot log) -->
+      <div id="distStationView" style="display:none;">
+        <div class="sta-row">
+          <div class="sta-col">
+            <label class="lbl-sm" for="slopeStaA">Station A <span class="abbr">#####+##</span></label>
+            <input type="text" id="slopeStaA" inputmode="decimal" maxlength="11" placeholder="0+00"
+                   data-persist data-reset
+                   oninput="onStationInput(this); slopeCalc();" onblur="onStationBlur(this); slopeCalc();">
+          </div>
+          <div class="sta-col">
+            <label class="lbl-sm" for="slopeStaB">Station B <span class="abbr">#####+##</span></label>
+            <input type="text" id="slopeStaB" inputmode="decimal" maxlength="11" placeholder="0+00"
+                   data-persist data-reset
+                   oninput="onStationInput(this); slopeCalc();" onblur="onStationBlur(this); slopeCalc();">
+          </div>
+        </div>
+        <div class="sta-dist-readout" id="staDistReadout">Distance: — ft</div>
+      </div>
+    </section>
+    <div class="field pipe-field" role="group" aria-labelledby="pipeLbl">
+      <div class="lbl" id="pipeLbl">Pipe inverts (optional) <span class="abbr">STICKS</span></div>
+      <div class="pipe-chips" id="pipeModeToggle">
+        <button type="button" id="pipe-off" class="active" data-act="setPipeMode" data-arg="off" aria-pressed="true">Off</button>
+        <button type="button" id="pipe-concrete" data-act="setPipeMode" data-arg="concrete" aria-pressed="false" aria-label="Concrete, 8 foot sticks">Conc. 8′</button>
+        <button type="button" id="pipe-sewer" data-act="setPipeMode" data-arg="sewer" aria-pressed="false" aria-label="Sewer, 14 foot sticks">Sewer 14′</button>
+        <button type="button" id="pipe-hppp" data-act="setPipeMode" data-arg="hppp" aria-pressed="false" aria-label="HPPP, 20 foot sticks">HPPP 20′</button>
+      </div>
+    </div>
+  </div>
 
   <!-- SLOPE RESULT (hidden in Leveling modes) -->
   <div id="slopeSection" style="display:none;">
@@ -1165,6 +1324,33 @@
     </div>
   </div>
 
+  <!-- ============ VERT OFFSET ============ -->
+  <div id="offsetView" style="display:none;">
+    <section class="tile">
+      <label class="lbl" for="offElev">Known elevation <span class="abbr">ELEV</span></label>
+      <div class="signed-row">
+        <button type="button" class="sign-btn" id="signBtn-offElev" data-act="signToggle" data-arg="offElev" aria-label="Toggle negative">+</button>
+        <input type="text" id="offElev" inputmode="decimal" placeholder="0.00"
+               data-persist data-reset data-signed oninput="onOffElevInput()">
+      </div>
+    </section>
+    <section class="tile">
+      <div class="lbl" id="offRowsLbl">Offsets (stack top → down) <span class="abbr">± FT / IN</span></div>
+      <div class="off-rows" id="offRows" role="group" aria-labelledby="offRowsLbl"></div>
+      <div class="frac-note" id="offFracNote" role="alert" style="display:none;">
+        ⚠ <b>Fractions are not accepted here</b> — enter the decimal.
+        <div class="frac-keys">
+          <span class="frac-key lead">6-3/8″ = <b>6.375</b> in</span>
+          <span class="frac-key">⅛ = .125</span><span class="frac-key">¼ = .25</span>
+          <span class="frac-key">⅜ = .375</span><span class="frac-key">½ = .5</span>
+          <span class="frac-key">⅝ = .625</span><span class="frac-key">¾ = .75</span>
+          <span class="frac-key">⅞ = .875</span>
+        </div>
+      </div>
+      <div class="off-hint">Each offset stacks on the one above. Toggle <b>−/+</b> for down/up and <b>in/ft</b> per row.</div>
+    </section>
+  </div>
+
   <!-- VERTICAL OFFSET RESULT (hidden otherwise) -->
   <div id="offsetSection" style="display:none;">
     <div class="result pending" id="offsetResult">
@@ -1179,49 +1365,29 @@
     </div>
   </div>
 
-  <button class="reset" data-act="resetAll">Clear All</button>
-
-  <!-- Saved-shot count + backup state. Lives outside the log so it survives a
-       mode switch, and so the destructive button always sits beside the truth
-       about whether the data has been exported. -->
-  <div class="shots-strip" id="shotsStrip">
-    <span>Saved shots: <b id="shotsCountStrip">0</b></span>
-    <span class="export-stamp never" id="exportStamp">never exported</span>
+  <!-- One-time install suggestion (mobile browser only, hidden when installed).
+       Below the tools, not above them: at the top it pushed the foresight
+       rod off the screen until it was dismissed. -->
+  <div class="install-tip" id="installTip" style="display:none;">
+    <div class="install-tip-head">📲 Add this tool to your home screen</div>
+    <div class="install-tip-body" id="installTipBody"></div>
+    <button class="install-tip-btn" data-act="dismissInstallTip">Got it</button>
   </div>
 
-  <!-- SURVEY SHOT LOG -->
+  <button class="reset" data-act="resetAll">Clear All</button>
+
+  <!-- SURVEY SHOT LOG. Shots are taken from the Save shot button in the dock;
+       what stays here is the run-level Job and the log itself. -->
   <div class="shots-section" id="shotsSection">
     <div class="shots-title">📋 Survey Shot Log</div>
-    <div class="shots-hint">Log shots as you go. Each one stores the benchmark, backsight, HI and foresight
-      alongside the computed elevation, so the office can re-reduce it. Export the whole run as a CSV to email.</div>
+    <div class="shots-hint">Tap <b>+ Save shot</b> in the bar at the bottom to log the current elevation. Each shot
+      stores the benchmark, backsight, HI and foresight alongside the elevation, so the office can re-reduce it.
+      Export the whole run as a CSV to email.</div>
 
     <div class="shot-field">
       <label class="lbl" for="shotJob">Job / Area <span class="abbr">stamped on every shot</span></label>
-      <input type="text" id="shotJob" inputmode="text" placeholder="e.g. Basin 3 storm run" data-persist>
+      <input type="text" id="shotJob" inputmode="text" placeholder="e.g. Basin 3 storm run" data-persist oninput="updateDock()">
     </div>
-    <div class="shot-field">
-      <label class="lbl" for="shotStation">Station <span class="abbr">#####+##</span></label>
-      <input type="text" id="shotStation" inputmode="decimal" maxlength="11" placeholder="###+##"
-             data-persist oninput="onStationInput(this)" onblur="onStationBlur(this)">
-    </div>
-    <div class="shot-field">
-      <label class="lbl" for="shotOffset">Offset <span class="abbr">FT FROM BASELINE</span></label>
-      <input type="text" id="shotOffset" inputmode="decimal" maxlength="8" placeholder="0.00"
-             data-persist oninput="onOffsetInput(this)" onblur="onOffsetBlur(this)">
-    </div>
-    <div class="shot-field" role="group" aria-labelledby="sideLbl">
-      <div class="lbl" id="sideLbl">Side of Baseline <span class="abbr">req. with offset</span></div>
-      <div class="side-toggle">
-        <button id="side-left" data-act="setSide" data-arg="Left" aria-pressed="false" disabled>◀ Left</button>
-        <button id="side-right" data-act="setSide" data-arg="Right" aria-pressed="false" disabled>Right ▶</button>
-      </div>
-    </div>
-    <div class="shot-field">
-      <label class="lbl" for="shotDesc">Description</label>
-      <input type="text" id="shotDesc" inputmode="text" placeholder="e.g. top of curb, invert, finish grade" data-persist>
-    </div>
-
-    <button class="save-shot-btn" data-act="saveShot">+ Save Shot</button>
 
     <div class="shots-list-head">
       <span>Saved shots: <b id="shotsCount">0</b></span>
@@ -1255,9 +1421,43 @@
   <div class="bug-footer" id="bugFooter"></div>
 
   <div class="foot">
+    Site Level Calculator · By Watershed Project Team<br>
     Differential leveling · field tool<br>
     Verify against control — double-check critical shots<br>
     <span class="ver" id="verFoot"></span>
+  </div>
+
+  <!-- ANSWER DOCK. Pinned to the bottom of the screen so the answer never
+       scrolls away from the rod readings that produced it. Filled by
+       updateDock() from the same numbers the cards above use. -->
+  <div class="dock" id="dock">
+    <div class="dock-inner">
+      <div class="dock-vals">
+        <div class="dock-sec">
+          <div class="dock-lbl" id="dockSecLbl">HI</div>
+          <div class="dock-sec-val" id="dockSecVal">—</div>
+        </div>
+        <div class="dock-main">
+          <div class="dock-lbl" id="dockMainLbl">Elevation</div>
+          <div class="dock-main-val" id="dockMainVal">—</div>
+        </div>
+      </div>
+      <div class="dock-msg" id="dockMsg"></div>
+      <div class="dock-actions" id="dockActions">
+        <button type="button" class="dock-save" data-act="openShotSheet">+ Save shot</button>
+        <button type="button" class="dock-turn" id="turnBtn" data-act="turnPoint" disabled
+                aria-label="Turn point: move the level up">↺ Turn</button>
+        <button type="button" class="dock-use" id="dockUseSlope" data-act="useElev" data-arg="slopeElevA" disabled
+                aria-label="Use this elevation as Slope A">→ Slope</button>
+      </div>
+      <!-- Saved-shot count + backup state. Lives outside the log so it survives a
+           mode switch, and so the destructive button always sits beside the truth
+           about whether the data has been exported. -->
+      <div class="shots-strip" id="shotsStrip">
+        <span><b id="shotsCountStrip">0</b> <span id="shotsWordStrip">shots</span><span id="stripJob"></span></span>
+        <span class="export-stamp never" id="exportStamp">never exported</span>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1300,6 +1500,51 @@
   </div>
 </div>
 
+<!-- Save shot. The per-point fields, one tap from the dock instead of a long
+     scroll down to the log. Same inputs, ids and masks as before. -->
+<div class="sheet-modal" id="shotSheet" style="display:none;" role="dialog" aria-modal="true"
+     aria-labelledby="shotSheetTitle" data-close="closeShotSheet">
+  <div class="sheet-card">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <span id="shotSheetTitle">Save shot</span>
+      <span class="sheet-elev" id="sheetElev">—</span>
+      <button class="map-close" data-act="closeShotSheet" aria-label="Close without saving">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-meta" id="sheetMeta"></div>
+      <div class="sheet-pair">
+        <div class="shot-field">
+          <label class="lbl" for="shotStation">Station <span class="abbr">#####+##</span></label>
+          <input type="text" id="shotStation" inputmode="decimal" maxlength="11" placeholder="###+##"
+                 data-persist oninput="onStationInput(this)" onblur="onStationBlur(this)">
+        </div>
+        <div class="shot-field">
+          <label class="lbl" for="shotOffset">Offset <span class="abbr">FT</span></label>
+          <input type="text" id="shotOffset" inputmode="decimal" maxlength="8" placeholder="0.00"
+                 data-persist oninput="onOffsetInput(this)" onblur="onOffsetBlur(this)">
+        </div>
+      </div>
+      <div class="shot-field" role="group" aria-labelledby="sideLbl">
+        <div class="lbl" id="sideLbl">Side of Baseline <span class="abbr">req. with offset</span></div>
+        <div class="side-toggle">
+          <button id="side-left" data-act="setSide" data-arg="Left" aria-pressed="false" disabled>◀ Left</button>
+          <button id="side-right" data-act="setSide" data-arg="Right" aria-pressed="false" disabled>Right ▶</button>
+        </div>
+      </div>
+      <div class="shot-field">
+        <label class="lbl" for="shotDesc">Description</label>
+        <input type="text" id="shotDesc" inputmode="text" placeholder="e.g. top of curb, invert, finish grade" data-persist>
+        <div class="desc-chips" id="descChips" role="group" aria-label="Quick descriptions"></div>
+      </div>
+      <div class="sheet-btns">
+        <button type="button" class="sheet-cancel" data-act="closeShotSheet">Cancel</button>
+        <button type="button" class="save-shot-btn" data-act="saveShotFromSheet">Save to log</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- One-time What's New / version notes -->
 <div class="whatsnew-modal" id="whatsnewModal" style="display:none;" role="dialog" aria-modal="true"
      aria-labelledby="whatsnewTitle" data-close="dismissWhatsNew">
@@ -1309,7 +1554,26 @@
       <span class="whatsnew-ver" id="whatsnewVer"></span>
     </div>
     <div class="whatsnew-body">
-      <p><b>Site Level Calculator v1.06</b> — five things that were quietly getting numbers wrong:</p>
+      <p><b>Site Level Calculator v1.07</b> — the same tools, laid out so you stop scrolling:</p>
+      <ul>
+        <li><b>The answer stays on screen</b> — HI and the elevation now sit in a bar pinned to the bottom,
+          right under your rod readings, instead of halfway down the page. It shows % slope or the target
+          elevation when you're in those tools.</li>
+        <li><b>Save shot is in that bar</b> — it opens a panel with Station, Offset, Side and Description,
+          plus one-tap picks from the descriptions you've already used today. The shot log, Job and Export
+          are still further down the page.</li>
+        <li><b>Turn is in that bar too</b>, next to Save shot.</li>
+        <li><b>Site Level / % Slope / Vert Offset are tabs in the header</b> now, instead of a toggle inside
+          Step 1.</li>
+        <li><b>Once you pick a benchmark it shrinks to one line</b> — its id, elevation and datum, with a
+          <b>Change</b> button. The box you need to fill next is outlined in yellow.</li>
+        <li><b>Backsight and foresight both fit on one screen</b> — each is one card, reading on the left and
+          rod on the right, so both are visible and draggable without scrolling. On shorter phones the rod's window is a little shorter — same rod face, same
+          ticks — and <b>double-tap</b> still opens it full height at 2×.</li>
+        <li><b>→ Slope</b> in the bottom bar carries the elevation straight into Slope A.</li>
+        <li><b>The rod is unchanged</b> — same face, same drag, same double-tap zoom.</li>
+      </ul>
+      <p><b>Still in from v1.06</b>:</p>
       <ul>
         <li><b>The export receipt tells the truth now</b> — it used to count shots, so deleting two and
           taking two more made it read "exported" for shots that had never left the phone. Each shot now
@@ -1369,7 +1633,7 @@
   // Single source of truth. sw.js derives its cache name from the ?v= on its
   // registration URL, the What's New gate compares against this, and the footer
   // and bug-report mailto both print it — so there is nothing left to hand-sync.
-  const APP_VERSION = '1.06';
+  const APP_VERSION = '1.07';
   // One list, referenced by the bug footer, the CSV mail fallback and the share
   // sheet text. A forwarding alias would be better still than two people.
   const CONTACT = ['dbertaut@rngd.com', 'fchavez@rngd.com'];
@@ -1669,7 +1933,9 @@
     const tag = document.getElementById('step1Tag');
     const title = document.getElementById('step1Title');
     const hint = document.getElementById('step1Hint');
-    if(isSlope){
+    if(!tag || !title || !hint){
+      // v1.07 layout: no Step 1 card heading to retitle.
+    } else if(isSlope){
       tag.textContent = 'Tool · % Slope';
       title.textContent = 'Percent Slope Calculator';
       hint.textContent = 'Enter two elevations and the horizontal distance between them. Result is the grade in percent (and ratio).';
@@ -1872,6 +2138,7 @@
     } else {
       selectedBmId = id;
       gpsWasUsedForSelection = gpsOn && !!id;
+      bmPickerOpen = false;
     }
     renderBmPicker(true); // re-render so the selected card highlights green
     updateGpsUi();     // minimap hides when selected, reappears when unselected (do this first)
@@ -1885,6 +2152,7 @@
     if(!sel) return;
     const id = sel.value;
     selectedBmId = id || null;
+    if(id) bmPickerOpen = false;
     gpsWasUsedForSelection = gpsOn && !!id;
     calc();
     saveState();
@@ -2666,11 +2934,12 @@
       (gpsWasUsedForSelection && source === 'db' && selectedBmId) ? 'flex' : 'none';
 
     updateUseRow(hi !== null && fs !== null);
+    updateDock();
   }
 
   // Enables the carry-forward controls only when there is a real elevation.
   function updateUseRow(hasElev){
-    ['useSlopeA','useSlopeB','useOffElev','turnBtn'].forEach(id => {
+    ['useSlopeA','useSlopeB','useOffElev','turnBtn','dockUseSlope'].forEach(id => {
       const b = document.getElementById(id);
       if(b) b.disabled = !hasElev;
     });
@@ -2705,6 +2974,7 @@
       runOriginId = selectedBmId || (source === 'manual' ? 'manual entry' : '');
     }
     turnCount += 1;
+    bmPickerOpen = false;
     document.getElementById('bmManual').value = fmtElev(e);
     setSource('manual');
     document.getElementById('bs').value = '';
@@ -2719,15 +2989,11 @@
     announce('Turn point set. Setup ' + (turnCount + 1) + '. Shoot a new backsight.');
   }
 
+  // Always shown in the header now, and refreshed from updateDock(), so a
+  // reload mid-run shows the restored setup rather than the markup default.
   function updateSetupTag(){
     const t = document.getElementById('setupTag');
-    if(!t) return;
-    if(turnCount > 0){
-      t.textContent = 'Setup ' + (turnCount + 1);
-      t.style.display = 'inline-block';
-    } else {
-      t.style.display = 'none';
-    }
+    if(t) t.textContent = 'Setup ' + (turnCount + 1);
   }
 
   // ===== Slope elevation sign handling =====
@@ -2896,6 +3162,7 @@
       document.getElementById('offFtIn').textContent = '';
       res.classList.add('pending');
       body.innerHTML = '<div class="off-empty">Enter a known elevation, then stack up to 5 offsets.</div>';
+      updateDock();
       return;
     }
     res.classList.remove('pending');
@@ -2923,6 +3190,7 @@
     body.innerHTML = rows;
     tgt.textContent = running.toFixed(2);
     document.getElementById('offFtIn').textContent = ftIn(running);
+    updateDock();
   }
 
   // ===== Slope mode =====
@@ -2930,6 +3198,7 @@
   // Positive = rising from A to B; negative = falling.
   let distMode = 'direct';   // 'direct' (feet) | 'station' (station-to-station)
   let pipeMode = 'off';      // 'off' | 'concrete' (8 ft) | 'sewer' (14 ft) | 'hppp' (20 ft)
+  let slopeLast = null;      // { rise, pct, d, eb } from the last complete slopeCalc(), for the dock
   // Effective stick length per pipe type, in feet.
   const PIPE_TYPES = {
     concrete: { len: 8,  label: 'CONCRETE · 8 ft' },
@@ -3047,6 +3316,8 @@
         : 'enter values';
       detEl.innerHTML = '';
       card.classList.add('pending');
+      slopeLast = null;
+      updateDock();
       return;
     }
 
@@ -3078,6 +3349,8 @@
     }
     detEl.innerHTML = detail;
     card.classList.remove('pending');
+    slopeLast = { rise: rise, pct: slopePct, d: d, eb: eb };
+    updateDock();
   }
 
   // ----- Pipe invert table: invert elevation at the end of each stick -----
@@ -3733,6 +4006,8 @@
     document.getElementById('shotsCount').textContent = shots.length;
     const strip = document.getElementById('shotsCountStrip');
     if(strip) strip.textContent = shots.length;
+    const word = document.getElementById('shotsWordStrip');
+    if(word) word.textContent = shots.length === 1 ? 'shot' : 'shots';
     renderExportStamp();
     const clearExp = document.getElementById('clearExportedBtn');
     if(clearExp) clearExp.disabled = !shots.some(s => s.exported);
@@ -4384,6 +4659,294 @@
     try { localStorage.setItem(WHATSNEW_KEY, APP_VERSION); } catch(e){}
   }
 
+  // ===== Answer dock =====
+  // One strip, pinned to the bottom, that always shows the current tool's
+  // answer. It reads the same numbers the cards compute; it never does its own
+  // survey arithmetic beyond HI = BM + BS and Elev = HI − FS, which are the
+  // same expressions calc() and getCurrentElevation() use.
+  function updateDock(){
+    const dock = document.getElementById('dock');
+    if(!dock) return;
+    const $ = id => document.getElementById(id);
+    const isSlope = (source === 'slope'), isOffset = (source === 'offset');
+    let secLbl, secVal, mainLbl, mainVal, msg, ready;
+    if(isSlope){
+      const L = slopeLast;
+      ready   = !!L;
+      mainLbl = (slopeGoal === 'elev') ? 'Elevation B' : '% Slope A → B';
+      mainVal = $('slopeOut').textContent;
+      secLbl  = 'Rise';
+      secVal  = L ? ((L.rise < 0 ? '−' : '+') + Math.abs(L.rise).toFixed(2)) : '—';
+      if(!L){
+        msg = $('slopeDir').textContent;              // "enter values" / distance errors
+      } else {
+        const abs = Math.abs(L.pct);
+        const parts = [];
+        if(slopeGoal === 'elev') parts.push(ftIn(L.eb), (L.pct < 0 ? '−' : '+') + abs.toFixed(2) + '%');
+        parts.push(abs <= 0.001 ? 'Level over ' + L.d.toFixed(2) + ' ft'
+          : (L.rise < 0 ? 'Falls ' : 'Rises ') + Math.abs(L.rise).toFixed(2) + ' ft over ' + L.d.toFixed(2) + ' ft');
+        if(abs > 0.001 && abs < 100){
+          const ratio = 100 / abs;
+          parts.push('1 : ' + ratio.toFixed(ratio >= 100 ? 0 : (ratio >= 10 ? 1 : 2)));
+        }
+        msg = parts.join('  ·  ');
+      }
+    } else if(isOffset){
+      ready   = !$('offsetResult').classList.contains('pending');
+      mainLbl = 'Target Elevation';
+      mainVal = $('offTarget').textContent;
+      const start = parseFloat($('offElev').value);
+      secLbl  = 'From';
+      secVal  = isNaN(start) ? '—' : fmtElev(start);
+      msg     = ready ? $('offFtIn').textContent : 'Enter a known elevation and an offset';
+    } else {
+      const bm = getBmElev(), bs = val('bs'), fs = val('fs');
+      const hi = (bm !== null && bs !== null) ? bm + bs : null;
+      const elev = (hi !== null && fs !== null) ? hi - fs : null;
+      ready   = elev !== null;
+      secLbl  = 'HI';
+      secVal  = fmtElev(hi);
+      mainLbl = 'Elevation';
+      mainVal = fmtElev(elev);
+      msg = ready ? (ftIn(elev) + '  ·  ' + fmtElev(bm) + ' + ' + fmtElev(bs) + ' − ' + fmtElev(fs))
+          : bm === null ? (source === 'manual' ? 'Key in the known elevation' : 'Choose a benchmark')
+          : bs === null ? 'Shoot a backsight on ' + bmName()
+          : 'Now shoot the point — foresight';
+      // The result card now only appears for the easter eggs; the dock carries
+      // the number the rest of the time.
+      const out = $('elev-out');
+      const egg = out.classList.contains('halo-egg') || out.classList.contains('nuke-egg');
+      $('result').style.display = egg ? '' : 'none';
+      // Outline whichever box needs filling next.
+      $('bmPickTile').classList.toggle('next', bm === null);
+      $('bsTile').classList.toggle('next', bm !== null && bs === null);
+      $('fsTile').classList.toggle('next', bm !== null && bs !== null && fs === null);
+      $('bsSub').textContent = 'Rod on ' + bmName();
+    }
+    $('dockSecLbl').textContent  = secLbl;
+    $('dockSecVal').textContent  = secVal;
+    $('dockMainLbl').textContent = mainLbl;
+    $('dockMainVal').textContent = mainVal;
+    $('dockMsg').textContent     = msg;
+    dock.classList.toggle('ready', ready);
+    dock.classList.toggle('no-actions', isSlope || isOffset);
+    const job = $('shotJob').value.trim();
+    $('stripJob').textContent = job ? ' in ' + job : '';
+    updateSetupTag();
+    updateBmChip();
+    syncDockSpace();
+    fitRods();
+  }
+
+  // ===== Fit both rods on screen =====
+  // With a benchmark chosen, both readings and both rods must be visible and
+  // draggable without scrolling. Only each rod's window height changes (170 px
+  // down to 50 px on the smallest screens): the face, scale and ticks are untouched, and double-tap
+  // still opens the full 2x rod for reading the hundredth.
+  const ROD_VP_MAX = 170, ROD_VP_SOFT_MIN = 90, ROD_VP_MIN = 50;
+  let fitScreen = { w: 0, h: 0 };
+  function refreshRods(){ syncRods('bs'); syncRods('fs'); }
+  function fitRods(){
+    const root = document.documentElement;
+    const chip = document.getElementById('bmChip');
+    const pair = document.querySelector('.rod-stack');
+    const dock = document.getElementById('dock');
+    const vp = document.querySelector('#bsTile .rod-viewport');
+    // Size for the SMALLEST window seen at this width while no field has
+    // focus: that is the phone browser with its toolbars showing, which is how
+    // the page sits when you are looking at the top of it. Heights measured
+    // while a field has focus are skipped, since they include the keyboard.
+    const typingField = isEntryField(document.activeElement);
+    if(window.innerWidth !== fitScreen.w) fitScreen = { w: window.innerWidth, h: 0 };
+    if(!typingField) fitScreen.h = fitScreen.h ? Math.min(fitScreen.h, window.innerHeight) : window.innerHeight;
+    if(!fitScreen.h) fitScreen.h = window.innerHeight;
+    root.classList.toggle('fit-short', fitScreen.h < 700);
+    const folded = !!chip && chip.style.display !== 'none';
+    const before = vp ? vp.clientHeight : 0;
+    if(!folded || !pair || !vp || !dock || !vp.clientHeight){
+      root.classList.remove('fit-1', 'fit-2');
+      fitRods.lastSig = '';
+      if(root.style.getPropertyValue('--rod-vh')){ root.style.removeProperty('--rod-vh'); refreshRods(); }
+      return;
+    }
+    if(document.body.classList.contains('typing')) return;
+    // Skip the search when nothing it depends on has changed; it runs from
+    // updateDock(), i.e. on every keystroke.
+    const sig = [fitScreen.h, window.innerWidth, pair.offsetTop, dock.offsetHeight,
+                 document.body.className, root.classList.contains('fit-short')].join('|');
+    if(sig === fitRods.lastSig) return;
+    // How far the bottom of the two cards sits below the top of the dock,
+    // with the page scrolled to the top.
+    const over = () => pair.getBoundingClientRect().bottom + window.scrollY - (fitScreen.h - dock.offsetHeight - 8);
+    const setVp = h => root.style.setProperty('--rod-vh', h + 'px');
+    // Tallest rod window in [lo, hi] that fits (each card is as tall as the
+    // larger of its rod and its reading column, so this is not linear).
+    const tallestFitting = (lo, hi) => {
+      setVp(lo); if(over() > 0) return lo - 1;
+      while(lo < hi){ const mid = Math.ceil((lo + hi) / 2); setVp(mid); if(over() <= 0) lo = mid; else hi = mid - 1; }
+      return lo;
+    };
+    // Step 0: shorter rods, down to 90 px.
+    root.classList.remove('fit-1', 'fit-2');
+    let want = tallestFitting(ROD_VP_SOFT_MIN, ROD_VP_MAX);
+    // Step 1: drop the dock's working line and the benchmark kind label.
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-1'); want = tallestFitting(ROD_VP_SOFT_MIN, ROD_VP_MAX); }
+    // Step 2: drop the drag/zoom hint text (Undo stays), and let the rods go
+    // down to 50 px.
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-2'); want = tallestFitting(ROD_VP_MIN, ROD_VP_MAX); }
+    want = Math.max(ROD_VP_MIN, want);
+    setVp(want);
+    fitRods.lastSig = [fitScreen.h, window.innerWidth, pair.offsetTop, dock.offsetHeight,
+                       document.body.className, root.classList.contains('fit-short')].join('|');
+    if(want !== before) refreshRods();
+  }
+  window.addEventListener('resize', fitRods);
+  // Anything above the cards that changes height re-fits them: the header
+  // once its web font arrives, the benchmark row, and the three banners.
+  if(typeof ResizeObserver !== 'undefined'){
+    const ro = new ResizeObserver(() => fitRods());
+    ['bmChip', 'updateBar', 'storageBar', 'staleBar'].forEach(id => { const el = document.getElementById(id); if(el) ro.observe(el); });
+    ro.observe(document.querySelector('header'));
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitRods());
+
+  // What the backsight is being shot on, in words.
+  function bmName(){
+    if(source === 'manual') return turnCount > 0 ? 'the turn point' : 'the known elevation';
+    return selectedBmId || 'the benchmark';
+  }
+
+  // ===== Benchmark row =====
+  // Once a benchmark is chosen (or a turn has carried one forward) the picker
+  // folds to one row: badge, id, elevation, datum, Change. Change reopens the
+  // picker without deselecting; Keep folds it again.
+  let bmPickerOpen = false;
+  function updateBmChip(){
+    const $ = id => document.getElementById(id);
+    const isLevel = (source === 'db' || source === 'manual');
+    const bm = getBmElev();
+    const isTp = (source === 'manual' && turnCount > 0 && bm !== null);
+    const picked = (source === 'db' && !!selectedBmId && bm !== null);
+    const folded = isLevel && !bmPickerOpen && (picked || isTp);
+    $('bmChip').style.display     = folded ? 'flex' : 'none';
+    $('bmPickTile').style.display = (isLevel && !folded) ? 'block' : 'none';
+    const keep = $('bmKeepBtn');
+    keep.style.display = (isLevel && bmPickerOpen && (picked || isTp)) ? 'block' : 'none';
+    keep.textContent = '✓ Keep ' + (isTp ? 'TP ' + turnCount : (selectedBmId || '')) + ' · ' + fmtElev(bm);
+    if(!folded) return;
+    const badge = $('chipBadge');
+    badge.textContent = isTp ? 'TP' : 'BM';
+    badge.classList.toggle('tp', isTp);
+    const KIND = { control:'Control monument', tbm:'Temporary benchmark', hub:'Temporary hub', other:'Benchmark' };
+    $('chipKind').textContent = isTp ? 'Turn point · setup ' + turnCount : KIND[bmType(selectedBmId)];
+    $('chipId').textContent   = isTp ? 'TP ' + turnCount : selectedBmId;
+    $('chipElev').textContent = fmtElev(bm);
+    // The datum line is the one safety note that must survive the fold.
+    const datum = BM_META.datumVerified
+      ? escapeHtml(BM_META.datum)
+      : '<span class="unverified">' + escapeHtml(BM_META.datum) + ' — unverified</span>';
+    // (A turn point's run origin is still stamped on every shot and in the CSV.)
+    const how = (!isTp && gpsWasUsedForSelection) ? 'picked by GPS' : '';
+    $('chipMeta').innerHTML = datum + (how ? ' · ' + how : '');
+    $('chipMeta').title = $('chipMeta').textContent;
+  }
+  function openBmPicker(){
+    // With GPS on, the old "Change benchmark" deselected so the nearest list
+    // came back; keep that, since the selected-only card is no help here.
+    if(source === 'db' && gpsOn && selectedBmId){ bmPickerOpen = false; selectBm(selectedBmId); return; }
+    bmPickerOpen = true;
+    updateDock();
+  }
+  function closeBmPicker(){
+    bmPickerOpen = false;
+    updateDock();
+  }
+
+  // The dock is fixed, so the page needs matching room at the bottom or the
+  // footer and settings end up underneath it.
+  function syncDockSpace(){
+    const dock = document.getElementById('dock');
+    if(dock) document.body.style.paddingBottom = (dock.offsetHeight + 24) + 'px';
+  }
+  if(typeof ResizeObserver !== 'undefined'){
+    new ResizeObserver(syncDockSpace).observe(document.getElementById('dock'));
+  }
+  window.addEventListener('resize', syncDockSpace);
+
+  // Keyboard up → the dock drops to just the numbers. Keyed on the visual
+  // viewport actually shrinking, not on focus alone: Android's back button
+  // hides the keyboard without blurring the field, and the Save button must
+  // come back when it does.
+  function isEntryField(el){
+    return !!el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && !el.closest('.sheet-modal');
+  }
+  function updateTypingState(){
+    const vv = window.visualViewport;
+    const kbd = !!vv && vv.height < window.innerHeight * 0.8;
+    document.body.classList.toggle('typing', kbd && isEntryField(document.activeElement));
+  }
+  document.addEventListener('focusin', updateTypingState);
+  document.addEventListener('focusout', () => setTimeout(updateTypingState, 0));
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', updateTypingState);
+
+  // ===== Save-shot sheet =====
+  // Quick picks: the run's own recent descriptions first (a storm run repeats
+  // the same few points all day), then a few common ones. Tapping one fills
+  // the field; it never saves by itself.
+  const DESC_DEFAULTS = ['Top of curb', 'Invert', 'Finish grade', 'Edge of pavement'];
+  function renderDescChips(){
+    const host = document.getElementById('descChips');
+    if(!host) return;
+    const seen = new Set(), list = [];
+    getShots().map(s => (s.description || '').trim()).reverse().concat(DESC_DEFAULTS).forEach(d => {
+      const k = d.toLowerCase();
+      if(d && !seen.has(k) && list.length < 6){ seen.add(k); list.push(d); }
+    });
+    host.innerHTML = '';
+    list.forEach(d => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'desc-chip';
+      b.textContent = d;
+      b.dataset.act = 'quickDesc';
+      b.dataset.arg = d;
+      host.appendChild(b);
+    });
+  }
+  function quickDesc(d){
+    const el = document.getElementById('shotDesc');
+    if(!el) return;
+    el.value = d;
+    saveState();
+  }
+  function openShotSheet(){
+    const e = getCurrentElevation();
+    const el = document.getElementById('sheetElev');
+    el.textContent = (e === null) ? 'no elevation' : fmtElev(e);
+    el.classList.toggle('none', e === null);
+    const job = document.getElementById('shotJob').value.trim();
+    const from = (source === 'manual')
+      ? (turnCount > 0 ? 'TP from setup ' + turnCount : 'manual BM')
+      : (selectedBmId || 'no benchmark');
+    document.getElementById('sheetMeta').innerHTML =
+      (job ? 'Job <b>' + escapeHtml(job) + '</b>' : 'No job set (add one in the Shot Log)') + ' · Setup ' + (turnCount + 1) +
+      ' · ' + escapeHtml(from);
+    renderDescChips();
+    openModalEl(document.getElementById('shotSheet'));
+  }
+  function closeShotSheet(){
+    const m = document.getElementById('shotSheet');
+    if(!m || m.style.display === 'none') return;
+    closeModalEl(m);
+  }
+  // saveShot() keeps all of its own checks and prompts; the sheet only closes
+  // once a shot has actually been added.
+  function saveShotFromSheet(){
+    const before = getShots().length;
+    saveShot();
+    if(getShots().length > before) closeShotSheet();
+  }
+
   // ===== Click dispatcher =====
   // One delegated listener instead of ~37 inline onclick attributes naming
   // globals that nothing verified still exist. Handlers stay top-level so the
@@ -4395,6 +4958,7 @@
     toggleGps, openMapModal, closeMapModal, closeRodZoom,
     resetAll, saveShot, clearShots, clearExportedShots, exportShots, exportPipe,
     setSide, useElev, turnPoint,
+    openShotSheet, closeShotSheet, saveShotFromSheet, quickDesc, openBmPicker, closeBmPicker,
     toggleSun, toggleRods, undoRodDrag,
     dismissInstallTip, dismissWhatsNew, dismissStale, applyUpdate
   };
@@ -4422,7 +4986,9 @@
     const wn = document.getElementById('whatsnewModal');
     const mm = document.getElementById('mapModal');
     const rz = document.getElementById('rodZoom');
+    const ss = document.getElementById('shotSheet');
     if(wn && wn.style.display === 'flex'){ dismissWhatsNew(); return; }
+    if(ss && ss.style.display === 'flex'){ closeShotSheet(); return; }
     if(rz && rz.style.display === 'flex'){ closeRodZoom(); return; }
     if(mm && mm.style.display === 'flex'){ closeMapModal(); }
   });
