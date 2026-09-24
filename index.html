@@ -822,11 +822,17 @@
   .tile-lbl{font-size:var(--fs-label); letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
-  /* Backsight / foresight tiles. Only the box around the input changes; the
-     .rod-widget beside it is the v1.06 widget, untouched. */
-  .rod-left{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
-  .rod-left input{flex:none; font-size:28px; padding:14px;}
-  .rod-sub{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.35;}
+  /* Backsight / foresight, side by side. The .rod-widget inside each is the
+     v1.06 widget, untouched; the one thing that varies is the height of its
+     window onto the rod (--rod-vh, set by fitRods), so both fit on screen.
+     The zoom widget is not inside .rod-tile and always gets the full rod. */
+  .rod-pair{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin-bottom:10px;}
+  .rod-pair .tile{margin-bottom:0; min-width:0;}
+  .rod-tile input{font-size:26px; padding:10px;}
+  .rod-sub{font-size:var(--fs-hint); color:var(--ink-dim); line-height:1.35; margin-top:5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rod-tile .rod-row{justify-content:center; margin-top:8px;}
+  .rod-tile .rod-viewport{height:var(--rod-vh, 170px);}
 
   /* Benchmark folded to one row */
   .bm-chip{display:flex; align-items:center; gap:12px;}
@@ -970,6 +976,17 @@
     .settings-block{flex-direction:column;}
     .use-btns button{flex:1 1 100%;}
   }
+  /* Short screens (iPhone SE/8 class): give the space to the two rods. The
+     benchmark row above already says what the backsight is on. */
+  @media (max-height:700px){
+    header{padding-top:calc(6px + var(--sat));}
+    .tool-tabs{margin-top:6px;}
+    .tool-tabs button{min-height:40px;}
+    .wrap{padding-top:8px;}
+    .tile{padding:8px 10px;}
+    .rod-sub{display:none;}
+    .rod-tile .rod-row{margin-top:6px;}
+  }
   @media (min-width:820px){
     .wrap{max-width:680px;}
     .dock-inner{max-width:680px;}
@@ -1108,29 +1125,51 @@
     <button type="button" class="bm-change" id="bmKeepBtn" data-act="closeBmPicker" style="display:none;"></button>
   </section>
 
-  <!-- Backsight. The rod widget below is the v1.06 widget, unchanged. -->
   <div id="levelingFields">
-    <section class="tile rod-tile" id="bsTile">
-      <label class="lbl" for="bs"><span><b class="step-num">1</b> Backsight</span> <span class="abbr">BS +</span></label>
-      <div class="rod-row">
-        <div class="rod-left">
-          <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
-                 data-persist data-reset oninput="calc()">
-          <div class="rod-sub" id="bsSub">Rod on the benchmark</div>
-        </div>
-        <div class="rod-widget" data-input="bs">
-          <div class="rod-viewport">
-            <div class="rod-strip"></div>
-            <div class="rod-crosshair"></div>
-            <div class="rod-oor-tag">OFF ROD</div>
+    <!-- Backsight and foresight side by side, so with a benchmark chosen both
+         readings and both rods are on screen at once. Each rod widget is the
+         v1.06 widget, unchanged; only its window height can shrink to fit the
+         phone (fitRods), and double-tap still opens the full 2x rod. -->
+    <div class="rod-pair">
+      <section class="tile rod-tile" id="bsTile">
+        <label class="lbl" for="bs"><span><b class="step-num">1</b> Backsight</span> <span class="abbr">BS +</span></label>
+        <input type="number" id="bs" inputmode="decimal" placeholder="0.00"
+               data-persist data-reset oninput="calc()">
+        <div class="rod-sub" id="bsSub">Rod on the benchmark</div>
+        <div class="rod-row">
+          <div class="rod-widget" data-input="bs">
+            <div class="rod-viewport">
+              <div class="rod-strip"></div>
+              <div class="rod-crosshair"></div>
+              <div class="rod-oor-tag">OFF ROD</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="rod-hint" data-rod="bs">
-        <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-        <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
-      </div>
-    </section>
+        <div class="rod-hint" data-rod="bs">
+          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="bs" hidden></button>
+        </div>
+      </section>
+      <section class="tile rod-tile" id="fsTile">
+        <label class="lbl" for="fs"><span><b class="step-num">2</b> Foresight</span> <span class="abbr">FS −</span></label>
+        <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
+               data-persist data-reset oninput="calc()">
+        <div class="rod-sub">Rod on the new point</div>
+        <div class="rod-row">
+          <div class="rod-widget" data-input="fs">
+            <div class="rod-viewport">
+              <div class="rod-strip"></div>
+              <div class="rod-crosshair"></div>
+              <div class="rod-oor-tag">OFF ROD</div>
+            </div>
+          </div>
+        </div>
+        <div class="rod-hint" data-rod="fs">
+          <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
+          <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
+        </div>
+      </section>
+    </div>
     <!-- HI is shown in the dock; this readout is kept only as calc()'s target. -->
     <div class="readout" aria-hidden="true">
       <span class="ro-label">Height of Instrument</span>
@@ -1140,29 +1179,6 @@
 
   <!-- LEVELING-ONLY SECTION (hidden in Slope mode) -->
   <div id="levelingSection">
-
-  <!-- Foresight. Same widget, unchanged. -->
-  <section class="tile rod-tile" id="fsTile">
-    <label class="lbl" for="fs"><span><b class="step-num">2</b> Foresight</span> <span class="abbr">FS −</span></label>
-    <div class="rod-row">
-      <div class="rod-left">
-        <input type="number" id="fs" inputmode="decimal" placeholder="0.00"
-               data-persist data-reset oninput="calc()">
-        <div class="rod-sub">Rod on the point you want</div>
-      </div>
-      <div class="rod-widget" data-input="fs">
-        <div class="rod-viewport">
-          <div class="rod-strip"></div>
-          <div class="rod-crosshair"></div>
-          <div class="rod-oor-tag">OFF ROD</div>
-        </div>
-      </div>
-    </div>
-    <div class="rod-hint" data-rod="fs">
-      <span class="rod-hint-text">↕ <b>Drag rod</b> to match — <b>double-tap</b> to zoom</span>
-      <button type="button" class="rod-undo" data-act="undoRodDrag" data-arg="fs" hidden></button>
-    </div>
-  </section>
 
   <div class="formula">
     <b>HI</b> = BM + BS &nbsp;·&nbsp; <b>Elev</b> = HI − FS
@@ -1532,8 +1548,10 @@
         <li><b>Site Level / % Slope / Vert Offset are tabs in the header</b> now, instead of a toggle inside
           Step 1.</li>
         <li><b>Once you pick a benchmark it shrinks to one line</b> — its id, elevation and datum, with a
-          <b>Change</b> button — so the backsight and foresight rods both fit on screen. The box you need to
-          fill next is outlined in yellow.</li>
+          <b>Change</b> button. The box you need to fill next is outlined in yellow.</li>
+        <li><b>Backsight and foresight sit side by side</b>, so both readings and both rods are on screen
+          without scrolling. On shorter phones the rod's window is a little shorter — same rod face, same
+          ticks — and <b>double-tap</b> still opens it full height at 2×.</li>
         <li><b>→ Slope</b> in the bottom bar carries the elevation straight into Slope A.</li>
         <li><b>The rod is unchanged</b> — same face, same drag, same double-tap zoom.</li>
       </ul>
@@ -4699,7 +4717,40 @@
     updateSetupTag();
     updateBmChip();
     syncDockSpace();
+    fitRods();
   }
+
+  // ===== Fit both rods on screen =====
+  // With a benchmark chosen, both readings and both rods must be visible and
+  // draggable without scrolling. Only each rod's window height changes (170 px
+  // down to 90 px): the face, scale and ticks are untouched, and double-tap
+  // still opens the full 2x rod for reading the hundredth.
+  const ROD_VP_MAX = 170, ROD_VP_MIN = 90;
+  let fitScreen = { w: 0, h: 0 };
+  function refreshRods(){ syncRods('bs'); syncRods('fs'); }
+  function fitRods(){
+    const root = document.documentElement;
+    const chip = document.getElementById('bmChip');
+    const pair = document.querySelector('.rod-pair');
+    const dock = document.getElementById('dock');
+    const vp = document.querySelector('#bsTile .rod-viewport');
+    // Tallest window seen at this width. A keyboard only ever shrinks the
+    // window, and the rods must not shrink because a keyboard opened.
+    if(window.innerWidth !== fitScreen.w) fitScreen = { w: window.innerWidth, h: 0 };
+    fitScreen.h = Math.max(fitScreen.h, window.innerHeight);
+    const folded = !!chip && chip.style.display !== 'none';
+    if(!folded || !pair || !vp || !dock || !vp.clientHeight){
+      if(root.style.getPropertyValue('--rod-vh')){ root.style.removeProperty('--rod-vh'); refreshRods(); }
+      return;
+    }
+    if(document.body.classList.contains('typing')) return;
+    const cur = vp.clientHeight;
+    const bottom = pair.getBoundingClientRect().bottom + window.scrollY;   // position on the page
+    const room = fitScreen.h - dock.offsetHeight - 8;                      // space above the dock at the top of the page
+    const want = Math.max(ROD_VP_MIN, Math.min(ROD_VP_MAX, Math.floor(cur - (bottom - room))));
+    if(want !== cur){ root.style.setProperty('--rod-vh', want + 'px'); refreshRods(); }
+  }
+  window.addEventListener('resize', fitRods);
 
   // What the backsight is being shot on, in words.
   function bmName(){
