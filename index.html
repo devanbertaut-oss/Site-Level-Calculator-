@@ -976,17 +976,21 @@
     .settings-block{flex-direction:column;}
     .use-btns button{flex:1 1 100%;}
   }
+  /* fitRods() steps, only when the rods alone cannot make room. */
+  .fit-1 .dock-msg, .fit-1 .bm-chip .tile-lbl{display:none;}
+  .fit-2 .rod-tile .rod-hint-text{display:none;}
   /* Short screens (iPhone SE/8 class): give the space to the two rods. The
      benchmark row above already says what the backsight is on. */
-  @media (max-height:700px){
-    header{padding-top:calc(6px + var(--sat));}
-    .tool-tabs{margin-top:6px;}
-    .tool-tabs button{min-height:40px;}
-    .wrap{padding-top:8px;}
-    .tile{padding:8px 10px;}
-    .rod-sub{display:none;}
-    .rod-tile .rod-row{margin-top:6px;}
-  }
+  /* Keyed to the same window height fitRods() sizes for (a class, not a
+     max-height query), so the two can never disagree when a browser's
+     toolbars slide in and out. */
+  .fit-short header{padding-top:calc(6px + var(--sat));}
+  .fit-short .tool-tabs{margin-top:6px;}
+  .fit-short .tool-tabs button{min-height:40px;}
+  .fit-short .wrap{padding-top:8px;}
+  .fit-short .tile{padding:8px 10px;}
+  .fit-short .rod-sub{display:none;}
+  .fit-short .rod-tile .rod-row{margin-top:6px;}
   @media (min-width:820px){
     .wrap{max-width:680px;}
     .dock-inner{max-width:680px;}
@@ -1043,12 +1047,6 @@
     <button type="button" data-act="dismissStale">OK</button>
   </div>
 
-  <!-- One-time install suggestion (mobile browser only, hidden when installed) -->
-  <div class="install-tip" id="installTip" style="display:none;">
-    <div class="install-tip-head">📲 Add this tool to your home screen</div>
-    <div class="install-tip-body" id="installTipBody"></div>
-    <button class="install-tip-btn" data-act="dismissInstallTip">Got it</button>
-  </div>
   <!-- Bouncing pointer at the browser's menu button while the tip is showing -->
   <div class="install-arrow" id="installArrow" style="display:none;" aria-hidden="true">
     <span class="install-arrow-label" id="installArrowLabel">Tap here</span>
@@ -1354,6 +1352,15 @@
       <div class="pipe-head">Offset Steps</div>
       <div id="offsetBody"></div>
     </div>
+  </div>
+
+  <!-- One-time install suggestion (mobile browser only, hidden when installed).
+       Below the tools, not above them: at the top it pushed the foresight
+       rod off the screen until it was dismissed. -->
+  <div class="install-tip" id="installTip" style="display:none;">
+    <div class="install-tip-head">📲 Add this tool to your home screen</div>
+    <div class="install-tip-body" id="installTipBody"></div>
+    <button class="install-tip-btn" data-act="dismissInstallTip">Got it</button>
   </div>
 
   <button class="reset" data-act="resetAll">Clear All</button>
@@ -4723,9 +4730,9 @@
   // ===== Fit both rods on screen =====
   // With a benchmark chosen, both readings and both rods must be visible and
   // draggable without scrolling. Only each rod's window height changes (170 px
-  // down to 90 px): the face, scale and ticks are untouched, and double-tap
+  // down to 50 px on the smallest screens): the face, scale and ticks are untouched, and double-tap
   // still opens the full 2x rod for reading the hundredth.
-  const ROD_VP_MAX = 170, ROD_VP_MIN = 90;
+  const ROD_VP_MAX = 170, ROD_VP_SOFT_MIN = 90, ROD_VP_MIN = 50;
   let fitScreen = { w: 0, h: 0 };
   function refreshRods(){ syncRods('bs'); syncRods('fs'); }
   function fitRods(){
@@ -4734,23 +4741,49 @@
     const pair = document.querySelector('.rod-pair');
     const dock = document.getElementById('dock');
     const vp = document.querySelector('#bsTile .rod-viewport');
-    // Tallest window seen at this width. A keyboard only ever shrinks the
-    // window, and the rods must not shrink because a keyboard opened.
+    // Size for the SMALLEST window seen at this width while no field has
+    // focus: that is the phone browser with its toolbars showing, which is how
+    // the page sits when you are looking at the top of it. Heights measured
+    // while a field has focus are skipped, since they include the keyboard.
+    const typingField = isEntryField(document.activeElement);
     if(window.innerWidth !== fitScreen.w) fitScreen = { w: window.innerWidth, h: 0 };
-    fitScreen.h = Math.max(fitScreen.h, window.innerHeight);
+    if(!typingField) fitScreen.h = fitScreen.h ? Math.min(fitScreen.h, window.innerHeight) : window.innerHeight;
+    if(!fitScreen.h) fitScreen.h = window.innerHeight;
+    root.classList.toggle('fit-short', fitScreen.h < 700);
     const folded = !!chip && chip.style.display !== 'none';
+    const before = vp ? vp.clientHeight : 0;
     if(!folded || !pair || !vp || !dock || !vp.clientHeight){
+      root.classList.remove('fit-1', 'fit-2');
       if(root.style.getPropertyValue('--rod-vh')){ root.style.removeProperty('--rod-vh'); refreshRods(); }
       return;
     }
     if(document.body.classList.contains('typing')) return;
-    const cur = vp.clientHeight;
-    const bottom = pair.getBoundingClientRect().bottom + window.scrollY;   // position on the page
-    const room = fitScreen.h - dock.offsetHeight - 8;                      // space above the dock at the top of the page
-    const want = Math.max(ROD_VP_MIN, Math.min(ROD_VP_MAX, Math.floor(cur - (bottom - room))));
-    if(want !== cur){ root.style.setProperty('--rod-vh', want + 'px'); refreshRods(); }
+    // How far the bottom of the two cards sits below the top of the dock,
+    // with the page scrolled to the top.
+    const over = () => pair.getBoundingClientRect().bottom + window.scrollY - (fitScreen.h - dock.offsetHeight - 8);
+    const setVp = h => root.style.setProperty('--rod-vh', h + 'px');
+    // Step 0: full-height rods if they fit, else shorter rods (down to 90).
+    root.classList.remove('fit-1', 'fit-2');
+    setVp(ROD_VP_MAX);
+    let o = over();
+    let want = ROD_VP_MAX - Math.max(0, o);
+    // Step 1: drop the dock's working line and the benchmark kind label.
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-1'); setVp(ROD_VP_SOFT_MIN); want = ROD_VP_SOFT_MIN - over(); }
+    // Step 2: drop the drag/zoom hint text (its Undo button stays).
+    if(want < ROD_VP_SOFT_MIN){ root.classList.add('fit-2'); setVp(ROD_VP_SOFT_MIN); want = ROD_VP_SOFT_MIN - over(); }
+    want = Math.max(ROD_VP_MIN, Math.min(ROD_VP_MAX, Math.floor(want)));
+    setVp(want);
+    if(want !== before) refreshRods();
   }
   window.addEventListener('resize', fitRods);
+  // Anything above the cards that changes height re-fits them: the header
+  // once its web font arrives, the benchmark row, and the three banners.
+  if(typeof ResizeObserver !== 'undefined'){
+    const ro = new ResizeObserver(() => fitRods());
+    ['bmChip', 'updateBar', 'storageBar', 'staleBar'].forEach(id => { const el = document.getElementById(id); if(el) ro.observe(el); });
+    ro.observe(document.querySelector('header'));
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitRods());
 
   // What the backsight is being shot on, in words.
   function bmName(){
